@@ -6,23 +6,6 @@
 #include<string.h>
 #include<Windows.h>
 
-#pragma region prototipovi f-ja
-void kreiranje_naloga();
-int izbroj_cifre(int number);
-void nacrtaj_korisnicki_ekran();
-void nacrtaj_admin_ekran();
-void nacrtaj_pocetni_ekran();
-void ocisti_ekran();
-void korisnicki_ekran();
-void admin_ekran();
-void pocetni_ekran();
-void ocisti_input_buffer();
-bool string_sadrzi_slova_i_specijalne_karaktere(const char* s);
-bool string_sadrzi_brojeve_i_specijalne_karaktere(const char* s);
-char* formatiraj_string(char* s);
-char* citaj_unos();
-#pragma endregion
-
 #pragma region strukture
 
 typedef struct 
@@ -43,6 +26,26 @@ typedef struct
 	char brojTelefona[12];
 }User;
 
+#pragma endregion
+
+#pragma region prototipovi f-ja
+void kreiranje_naloga(User* user);
+int izbroj_cifre(int number);
+void nacrtaj_korisnicki_ekran();
+void nacrtaj_admin_ekran();
+void nacrtaj_pocetni_ekran();
+void ocisti_ekran();
+void korisnicki_ekran();
+void admin_ekran();
+void pocetni_ekran(User* user);
+void ocisti_input_buffer();
+bool string_sadrzi_slova_i_specijalne_karaktere(const char* s);
+bool string_sadrzi_brojeve_i_specijalne_karaktere(const char* s);
+char* formatiraj_string(char* s);
+char* citaj_unos();
+bool upisi_podatke_u_fajl(User user);
+void procitaj_podatke_iz_fajla(); //Vise je kao test funkcija
+bool korisnik_vec_postoji(User korisnik_koji_se_registruje);
 #pragma endregion
 
 #pragma region pomocne f-je
@@ -147,6 +150,92 @@ char* citaj_unos()
 	}
 
 	return line;
+}
+
+bool upisi_podatke_u_fajl(User user) 
+{
+	int upisano = 0;
+	if (!korisnik_vec_postoji(user)) 
+	{
+		FILE* fajl;
+		fajl = fopen("registrovani_korisnici.bin", "ab");
+		if (fajl == NULL)
+		{
+			fprintf(stderr, "Greska prilikom otvaranja fajla!\n");
+			exit(1);
+		}
+		upisano = fwrite(&user, sizeof(User), 1, fajl);
+		fclose(fajl);
+	}
+	else
+		printf("Korisnik vec postoji u bazi, ne mozete da se registrujete dva puta kao isti korisnik!\n\n");
+	
+	if (upisano == 1)
+	{
+		printf("Uspesna registracija, podaci zabelezeni!\n");
+		return true;
+	}
+	else 
+	{
+		printf("Greska prilikom registracije i upisa podataka!\n");
+		return false;
+	}
+}
+
+void procitaj_podatke_iz_fajla() 
+{
+	User user;
+	FILE* fajl;
+	fajl = fopen("registrovani_korisnici.bin", "rb");
+	if (fajl == NULL)
+	{
+		fprintf(stderr, "Greska prilikom otvaranja fajla!\n");
+		exit(1);
+	}
+	while (fread(&user, sizeof(user), 1, fajl) == 1) 
+	{
+		printf("JMBG: %s\n", user.jmbg);
+		printf("Ime: %s\n", user.imeKorisnika);
+		printf("Prezime: %s\n", user.prezimeKorisnika);
+		printf("Email: %s\n", user.email);
+		printf("Broj telefona: %s\n", user.brojTelefona);
+		printf("Sifra: %s\n", user.sifra);
+		printf("Vas tip korisnika: %s\n", user.tipKorisnika);
+		printf("\n");
+	}
+	fclose(fajl);
+}
+
+bool korisnik_vec_postoji(User korisnik_koji_se_registruje) 
+{
+	User user;
+	FILE* fajl;
+	fajl = fopen("registrovani_korisnici.bin", "rb");
+	if (fajl == NULL)
+	{
+		fprintf(stderr, "Greska prilikom otvaranja fajla!\n");
+		exit(1);
+	}
+	while (fread(&user, sizeof(user), 1, fajl) == 1)
+	{
+		if (strcmp(korisnik_koji_se_registruje.jmbg, user.jmbg) == 0) 
+		{
+			fclose(fajl);
+			return true;
+		}
+		if (strcmp(korisnik_koji_se_registruje.email, user.email) == 0) 
+		{
+			fclose(fajl);
+			return true;
+		}
+		if (strcmp(korisnik_koji_se_registruje.brojTelefona, user.brojTelefona) == 0) 
+		{
+			fclose(fajl);
+			return true;
+		}
+	}
+	fclose(fajl);
+	return false;
 }
 
 #pragma endregion
@@ -260,7 +349,7 @@ void admin_ekran()
 	}
 }
 
-void pocetni_ekran()
+void pocetni_ekran(User* user)
 {
 	int izbor, ret;
 	nacrtaj_pocetni_ekran();
@@ -280,7 +369,7 @@ void pocetni_ekran()
 	if (izbor == 1)
 	{
 		ocisti_ekran();
-		kreiranje_naloga();
+		kreiranje_naloga(&user);
 	}
 	else if (izbor == 2)
 	{
@@ -288,31 +377,30 @@ void pocetni_ekran()
 	}
 }
 
-void kreiranje_naloga()
+void kreiranje_naloga(User* user)
 {
 	printf("Kreirajte nalog popunjavanjem svih podataka, svi podaci su obavezni: \n\n");
-	User user;
-	user.jmbg[0] = '\0';
-	user.imeKorisnika[0] = '\0';
-	user.prezimeKorisnika[0] = '\0';
-	user.sifra[0] = '\0';
-	user.email[0] = '\0';
-	user.brojTelefona[0] = '\0';
+	user->jmbg[0] = '\0';
+	user->imeKorisnika[0] = '\0';
+	user->prezimeKorisnika[0] = '\0';
+	user->sifra[0] = '\0';
+	user->email[0] = '\0';
+	user->brojTelefona[0] = '\0';
 
-	strcpy_s(user.tipKorisnika, sizeof(user.tipKorisnika), "user");
+	strcpy_s(user->tipKorisnika, sizeof(user->tipKorisnika), "user");
 
 	do 
 	{
 		printf("Unesite vas JMBG (13 cifara): ");
-		fgets(user.jmbg, sizeof(user.jmbg), stdin);
-		user.jmbg[strcspn(user.jmbg, "\n")] = '\0';
-		if (strlen(user.jmbg) != 13 || string_sadrzi_slova_i_specijalne_karaktere(user.jmbg))
+		fgets(user->jmbg, sizeof(user->jmbg), stdin);
+		user->jmbg[strcspn(user->jmbg, "\n")] = '\0';
+		if (strlen(user->jmbg) != 13 || string_sadrzi_slova_i_specijalne_karaktere(user->jmbg))
 		{
 			ocisti_ekran();
 			printf("Kreirajte nalog popunjavanjem svih podataka, svi podaci su obavezni: \n\n");
 			printf("Greska pri unosu, jmbg mora imati 13 cifara, i ne sme sadrzati slova i specijalne karaktere\n");
 		}
-		else if(strlen(user.jmbg) == 13 && !string_sadrzi_slova_i_specijalne_karaktere(user.jmbg))
+		else if(strlen(user->jmbg) == 13 && !string_sadrzi_slova_i_specijalne_karaktere(user->jmbg))
 		{
 			break;
 		}
@@ -327,14 +415,18 @@ void kreiranje_naloga()
 		{
 			ocisti_ekran();
 			printf("Kreirajte nalog popunjavanjem svih podataka, svi podaci su obavezni: \n\n");
-			printf("JMBG: %s\n", user.jmbg);
+			printf("JMBG: %s\n", user->jmbg);
 			printf("Greska pri unosu, ime mora imati od 1 do 50 karaktera i ne sme sadrzati brojeve i specijalne karaktere\n");
 			input = '\0';
+			free(input);
+			input = NULL;
 		}
 		else if (strlen(input) > 0 && strlen(input) < 49 && !string_sadrzi_brojeve_i_specijalne_karaktere(input))
 		{
-			strcpy(user.imeKorisnika, input);
-			formatiraj_string(user.imeKorisnika);
+			strcpy(user->imeKorisnika, input);
+			formatiraj_string(user->imeKorisnika);
+			free(input);
+			input = NULL;
 			break;
 		}
 
@@ -349,15 +441,19 @@ void kreiranje_naloga()
 		{
 			ocisti_ekran();
 			printf("Kreirajte nalog popunjavanjem svih podataka, svi podaci su obavezni: \n\n");
-			printf("JMBG: %s\n", user.jmbg);
-			printf("Ime: %s\n", user.imeKorisnika);
+			printf("JMBG: %s\n", user->jmbg);
+			printf("Ime: %s\n", user->imeKorisnika);
 			printf("Greska pri unosu, prezime mora imati od 1 do 50 karaktera i ne sme sadrzati brojeve i specijalne karaktere\n");
 			input = '\0';
+			free(input);
+			input = NULL;
 		}
 		else if (strlen(input) > 0 && strlen(input) < 49 && !string_sadrzi_brojeve_i_specijalne_karaktere(input))
 		{
-			strcpy(user.prezimeKorisnika, input);
-			formatiraj_string(user.prezimeKorisnika);
+			strcpy(user->prezimeKorisnika, input);
+			formatiraj_string(user->prezimeKorisnika);
+			free(input);
+			input = NULL;
 			break;
 		}
 
@@ -372,16 +468,21 @@ void kreiranje_naloga()
 		{
 			ocisti_ekran();
 			printf("Kreirajte nalog popunjavanjem svih podataka, svi podaci su obavezni: \n\n");
-			printf("JMBG: %s\n", user.jmbg);
-			printf("Ime: %s\n", user.imeKorisnika);
-			printf("Prezime: %s\n", user.prezimeKorisnika);
+			printf("JMBG: %s\n", user->jmbg);
+			printf("Ime: %s\n", user->imeKorisnika);
+			printf("Prezime: %s\n", user->prezimeKorisnika);
 			printf("Greska pri unosu, email mora imati od 1 do 50 karaktera, i mora biti u formatu primer@gmail.com\n");
 			input = '\0';
+			free(input);
+			input = NULL;
+
 		}
 		else if (strlen(input) > 0 && strlen(input) < 49 && email_je_ispravno_formatiran(input))
 		{
-			strcpy(user.email, input);
-			formatiraj_string(user.email);
+			strcpy(user->email, input);
+			formatiraj_string(user->email);
+			free(input);
+			input = NULL;
 			break;
 		}
 
@@ -390,19 +491,19 @@ void kreiranje_naloga()
 	do
 	{
 		printf("Unesite vas broj telefona (10 cifara): ");
-		fgets(user.brojTelefona, sizeof(user.brojTelefona), stdin);
-		user.brojTelefona[strcspn(user.brojTelefona, "\n")] = '\0';
-		if (strlen(user.brojTelefona) != 10 || string_sadrzi_slova_i_specijalne_karaktere(user.brojTelefona))
+		fgets(user->brojTelefona, sizeof(user->brojTelefona), stdin);
+		user->brojTelefona[strcspn(user->brojTelefona, "\n")] = '\0';
+		if (strlen(user->brojTelefona) != 10 || string_sadrzi_slova_i_specijalne_karaktere(user->brojTelefona))
 		{
 			ocisti_ekran();
 			printf("Kreirajte nalog popunjavanjem svih podataka, svi podaci su obavezni: \n\n");
-			printf("JMBG: %s\n", user.jmbg);
-			printf("Ime: %s\n", user.imeKorisnika);
-			printf("Prezime: %s\n", user.prezimeKorisnika);
-			printf("Email: %s\n", user.email);
+			printf("JMBG: %s\n", user->jmbg);
+			printf("Ime: %s\n", user->imeKorisnika);
+			printf("Prezime: %s\n", user->prezimeKorisnika);
+			printf("Email: %s\n", user->email);
 			printf("Greska pri unosu, broj telefona mora imati 10 cifara, i ne sme sadrzati slova  i specijalne karaktere\n");
 		}
-		else if (strlen(user.brojTelefona) == 10 && !string_sadrzi_slova_i_specijalne_karaktere(user.brojTelefona))
+		else if (strlen(user->brojTelefona) == 10 && !string_sadrzi_slova_i_specijalne_karaktere(user->brojTelefona))
 		{
 			break;
 		}
@@ -417,41 +518,59 @@ void kreiranje_naloga()
 		{
 			ocisti_ekran();
 			printf("Kreirajte nalog popunjavanjem svih podataka, svi podaci su obavezni: \n\n");
-			printf("JMBG: %s\n", user.jmbg);
-			printf("Ime: %s\n", user.imeKorisnika);
-			printf("Prezime: %s\n", user.prezimeKorisnika);
-			printf("Email: %s\n", user.email);
-			printf("Broj telefona: %s\n", user.brojTelefona);
+			printf("JMBG: %s\n", user->jmbg);
+			printf("Ime: %s\n", user->imeKorisnika);
+			printf("Prezime: %s\n", user->prezimeKorisnika);
+			printf("Email: %s\n", user->email);
+			printf("Broj telefona: %s\n", user->brojTelefona);
 			printf("Greska pri unosu, sifra mora imati minimum duzinu 10, a maksimum 1024, i mora sadrzati bar jedno slovo sadrzati ili specijalni karakter\n");
+			input = '\0';
+			free(input);
+			input = NULL;
 		}
 		else if (strlen(input) >= 10 && strlen(input) < 1024 && string_sadrzi_slova_i_specijalne_karaktere(input))
 		{
-			strcpy(user.sifra, input);
+			strcpy(user->sifra, input);
+			free(input);
+			input = NULL;
 			break;
 		}
 	} while (1);
 
 	// Ispis unetih vrednosti radi provere
-	printf("\nRegistracija uspesna, vasi podaci:\n");
-	printf("JMBG: %s\n", user.jmbg);
-	printf("Ime: %s\n", user.imeKorisnika);
-	printf("Prezime: %s\n", user.prezimeKorisnika);
-	printf("Email: %s\n", user.email);
-	printf("Broj telefona: %s\n", user.brojTelefona);
-	printf("Sifra: %s\n", user.sifra);
-	printf("Vas tip korisnika: %s\n", user.tipKorisnika);
-	printf("\nKreiranje naloga, molimo sacekajte...\n");
-	Sleep(3000); //Simulacija kreiranja naloga, moze da se obrise zbog performansi, cisto je tu zbog izgleda :)
-	printf("Nalog uspesno kreiran, redirektovanje na pocetnu stranicu...");
-	Sleep(2000);
-	ocisti_ekran();
-	korisnicki_ekran();
+	bool uspesna_registracija = upisi_podatke_u_fajl(*user);
+	if (uspesna_registracija) 
+	{
+		printf("\nRegistracija uspesna, vasi podaci:\n");
+		printf("JMBG: %s\n", user->jmbg);
+		printf("Ime: %s\n", user->imeKorisnika);
+		printf("Prezime: %s\n", user->prezimeKorisnika);
+		printf("Email: %s\n", user->email);
+		printf("Broj telefona: %s\n", user->brojTelefona);
+		printf("Sifra: %s\n", user->sifra);
+		printf("Vas tip korisnika: %s\n\n", user->tipKorisnika);
+		printf("Vec postojeci korisnici: \n\n");
+		procitaj_podatke_iz_fajla();
+		printf("\nKreiranje naloga, molimo sacekajte...\n");
+		Sleep(3000); //Simulacija kreiranja naloga, moze da se obrise zbog performansi, cisto je tu zbog izgleda :)
+		printf("Nalog uspesno kreiran, redirektovanje na pocetnu stranicu...");
+		Sleep(2000);
+		ocisti_ekran();
+		korisnicki_ekran();
+	}
+	else 
+	{
+		printf("Greska prilikom kreiranja naloga, molimo pokusajte opet\n");
+		printf("Vec postojeci korisnici: \n\n");
+		procitaj_podatke_iz_fajla();
+	}
 }
 
 #pragma endregion
 
 int main()
 {
-	pocetni_ekran();
+	User user;
+	pocetni_ekran(&user);
 	return 0;
 }
