@@ -18,5 +18,37 @@
     <ClCompile Include="Source.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DrawFunkcije.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="KreiranjeNaloga.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Ekrani.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DrawFunkcije.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Strukture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KreiranjeNaloga.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Ekrani.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

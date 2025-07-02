@@ -19,7 +19,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DrawFunkcije.c" />
+    <ClCompile Include="Ekrani.c" />
+    <ClCompile Include="KreiranjeNaloga.c" />
     <ClCompile Include="Source.c" />
+    <ClCompile Include="Utils.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DrawFunkcije.h" />
+    <ClInclude Include="Ekrani.h" />
+    <ClInclude Include="Include.h" />
+    <ClInclude Include="KreiranjeNaloga.h" />
+    <ClInclude Include="Strukture.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
