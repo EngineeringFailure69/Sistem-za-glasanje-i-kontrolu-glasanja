@@ -43,11 +43,6 @@ bool birac_postoji(User korisnik_koji_se_registruje)
             fclose(fajl);
             return true;
         }
-        else
-        {
-            fclose(fajl);
-            return false;
-        }
     }
     fclose(fajl);
     return false;

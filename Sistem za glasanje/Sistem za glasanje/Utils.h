@@ -12,3 +12,5 @@ void procitaj_podatke_iz_fajla(); //Vise je kao test funkcija
 bool korisnik_vec_postoji(User korisnik_koji_se_registruje);
 int izbroj_cifre(int number);
 bool email_je_ispravno_formatiran(char* s);
+void unesi_podatke(User* user);
+void ocisti_podatke(User* user);

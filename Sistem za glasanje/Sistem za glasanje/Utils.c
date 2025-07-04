@@ -1,8 +1,3 @@
-//#include "Utils.h"
-//#include<stdbool.h>
-//#include<stdio.h>
-//#include "Strukture.h"
-
 #define _CRT_SECURE_NO_WARNINGS
 
 #include"Include.h"
@@ -197,4 +192,220 @@ bool korisnik_vec_postoji(User korisnik_koji_se_registruje)
 	}
 	fclose(fajl);
 	return false;
+}
+
+void unesi_podatke(User* user) 
+{
+	user->jmbg[0] = '\0';
+	user->imeKorisnika[0] = '\0';
+	user->prezimeKorisnika[0] = '\0';
+	user->sifra[0] = '\0';
+	user->email[0] = '\0';
+	user->brojTelefona[0] = '\0';
+	user->glasackiBroj[0] = '\0';
+	user->tipKorisnika[0] = '\0';
+	
+	user->tipKorisnika[strcspn(user->tipKorisnika, "\r\n")] = '\0';
+	strncpy(user->tipKorisnika, "user", 5);
+	user->tipKorisnika[4] = '\0';
+	
+	do
+	{
+		printf("Unesite vas JMBG (13 cifara): ");
+		char* input = citaj_unos();
+		input[strcspn(input, "\r\n")] = '\0';
+		if (strlen(input) != 13 || string_sadrzi_slova_i_specijalne_karaktere(input))
+		{
+			ocisti_ekran();
+			printf("Svi podaci su obavezni: \n\n");
+			printf("Greska pri unosu, jmbg mora imati 13 cifara, i ne sme sadrzati slova i specijalne karaktere\n");
+			free(input);
+			input = NULL;
+		}
+		else if (strlen(input) == 13 && !string_sadrzi_slova_i_specijalne_karaktere(input))
+		{
+			strncpy(user->jmbg, input, 13);
+			user->jmbg[13] = '\0';
+			free(input);
+			input = NULL;
+			break;
+		}
+	} while (1);
+	
+	do
+	{
+		printf("Unesite vase ime: ");
+		char* input = citaj_unos();
+		input[strcspn(input, "\r\n")] = '\0';
+		if (strlen(input) <= 0 || strlen(input) > 14 || string_sadrzi_brojeve_i_specijalne_karaktere(input))
+		{
+			ocisti_ekran();
+			printf("Svi podaci su obavezni: \n\n");
+			printf("JMBG: %s\n", user->jmbg);
+			printf("Greska pri unosu, ime mora imati od 1 do 15 karaktera i ne sme sadrzati brojeve i specijalne karaktere\n");
+			free(input);
+			input = NULL;
+		}
+		else if (strlen(input) > 0 && strlen(input) <= 14 && !string_sadrzi_brojeve_i_specijalne_karaktere(input))
+		{
+			strncpy(user->imeKorisnika, input, strlen(input));
+			user->imeKorisnika[strlen(input)] = '\0';
+			formatiraj_string(user->imeKorisnika);
+			free(input);
+			input = NULL;
+			break;
+		}
+	
+	} while (1);
+	
+	do
+	{
+		printf("Unesite vase prezime: ");
+		char* input = citaj_unos();
+		input[strcspn(input, "\r\n")] = '\0';
+		if (strlen(input) <= 0 || strlen(input) > 29 || string_sadrzi_brojeve_i_specijalne_karaktere(input))
+		{
+			ocisti_ekran();
+			printf("Svi podaci su obavezni: \n\n");
+			printf("JMBG: %s\n", user->jmbg);
+			printf("Ime: %s\n", user->imeKorisnika);
+			printf("Greska pri unosu, prezime mora imati od 1 do 30 karaktera i ne sme sadrzati brojeve i specijalne karaktere\n");
+			free(input);
+			input = NULL;
+		}
+		else if (strlen(input) > 0 && strlen(input) <= 29 && !string_sadrzi_brojeve_i_specijalne_karaktere(input))
+		{
+			strncpy(user->prezimeKorisnika, input, strlen(input));
+			user->prezimeKorisnika[strlen(input)] = '\0';
+			formatiraj_string(user->prezimeKorisnika);
+			free(input);
+			input = NULL;
+			break;
+		}
+	
+	} while (1);
+	
+	do
+	{
+		printf("Unesite vas email: ");
+		char* input = citaj_unos();
+		input[strcspn(input, "\r\n")] = '\0';
+		if (strlen(input) <= 0 || strlen(input) > 49 || !email_je_ispravno_formatiran(input))
+		{
+			ocisti_ekran();
+			printf("Svi podaci su obavezni: \n\n");
+			printf("JMBG: %s\n", user->jmbg);
+			printf("Ime: %s\n", user->imeKorisnika);
+			printf("Prezime: %s\n", user->prezimeKorisnika);
+			printf("Greska pri unosu, email mora imati od 1 do 50 karaktera, i mora biti u formatu primer@gmail.com\n");
+			free(input);
+			input = NULL;
+	
+		}
+		else if (strlen(input) > 0 && strlen(input) <= 49 && email_je_ispravno_formatiran(input))
+		{
+			strncpy(user->email, input, strlen(input));
+			user->email[strlen(input)] = '\0';
+			formatiraj_string(user->email);
+			free(input);
+			input = NULL;
+			break;
+		}
+	
+	} while (1);
+	
+	do
+	{
+		printf("Unesite vas broj telefona (10 cifara): ");
+		char* input = citaj_unos();
+		input[strcspn(input, "\r\n")] = '\0';
+		if (strlen(input) != 10 || string_sadrzi_slova_i_specijalne_karaktere(input))
+		{
+			ocisti_ekran();
+			printf("Svi podaci su obavezni: \n\n");
+			printf("JMBG: %s\n", user->jmbg);
+			printf("Ime: %s\n", user->imeKorisnika);
+			printf("Prezime: %s\n", user->prezimeKorisnika);
+			printf("Email: %s\n", user->email);
+			printf("Greska pri unosu, broj telefona mora imati 10 cifara, i ne sme sadrzati slova  i specijalne karaktere\n");
+			free(input);
+			input = NULL;
+		}
+		else if (strlen(input) == 10 && !string_sadrzi_slova_i_specijalne_karaktere(input))
+		{
+			strncpy(user->brojTelefona, input, 10);
+			user->brojTelefona[10] = '\0';
+			free(input);
+			input = NULL;
+			break;
+		}
+	} while (1);
+	
+	do
+	{
+		printf("Unesite sifru: ");
+		char* input = citaj_unos();
+		input[strcspn(input, "\r\n")] = '\0';
+		if (strlen(input) < 10 || strlen(input) > 1023 || !string_sadrzi_slova_i_specijalne_karaktere(input))
+		{
+			ocisti_ekran();
+			printf("Svi podaci su obavezni: \n\n");
+			printf("JMBG: %s\n", user->jmbg);
+			printf("Ime: %s\n", user->imeKorisnika);
+			printf("Prezime: %s\n", user->prezimeKorisnika);
+			printf("Email: %s\n", user->email);
+			printf("Broj telefona: %s\n", user->brojTelefona);
+			printf("Greska pri unosu, sifra mora imati minimum duzinu 10, a maksimum 1024, i mora sadrzati bar jedno slovo sadrzati ili specijalni karakter\n");
+			free(input);
+			input = NULL;
+		}
+		else if (strlen(input) >= 10 && strlen(input) <= 1023 && string_sadrzi_slova_i_specijalne_karaktere(input))
+		{
+			strncpy(user->sifra, input, strlen(input));
+			user->sifra[strlen(input)] = '\0';
+			free(input);
+			input = NULL;
+			break;
+		}
+	} while (1);
+	
+	do
+	{
+		printf("Unesite vas glasacki broj koji ste dobili na kucnu adresu (6 cifara): ");
+		char* input = citaj_unos();
+		input[strcspn(input, "\r\n")] = '\0';
+		if (strlen(input) != 6 || string_sadrzi_slova_i_specijalne_karaktere(input))
+		{
+			ocisti_ekran();
+			printf("Svi podaci su obavezni: \n\n");
+			printf("JMBG: %s\n", user->jmbg);
+			printf("Ime: %s\n", user->imeKorisnika);
+			printf("Prezime: %s\n", user->prezimeKorisnika);
+			printf("Email: %s\n", user->email);
+			printf("Broj telefona: %s\n", user->brojTelefona);
+			printf("Greska pri unosu, glasacki broj mora imati duzinu 6 i nesme da sadrzi slova i specijalne karaktere\n");
+			free(input);
+			input = NULL;
+		}
+		else if (strlen(input) == 6 && !string_sadrzi_slova_i_specijalne_karaktere(input))
+		{
+			strncpy(user->glasackiBroj, input, 6);
+			user->glasackiBroj[6] = '\0';
+			free(input);
+			input = NULL;
+			break;
+		}
+	} while (1);
+}
+
+void ocisti_podatke(User* user) 
+{
+	user->jmbg[0] = '\0';
+	user->imeKorisnika[0] = '\0';
+	user->prezimeKorisnika[0] = '\0';
+	user->sifra[0] = '\0';
+	user->email[0] = '\0';
+	user->brojTelefona[0] = '\0';
+	user->glasackiBroj[0] = '\0';
+	user->tipKorisnika[0] = '\0';
 }
