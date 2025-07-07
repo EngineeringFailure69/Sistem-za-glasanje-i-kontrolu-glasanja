@@ -1,6 +1,6 @@
 #include"Include.h"
 
-void korisnicki_ekran()
+void korisnicki_ekran(User* user)
 {
 	int izbor, ret;
 	nacrtaj_korisnicki_ekran();
@@ -22,10 +22,14 @@ void korisnicki_ekran()
 		ocisti_ekran();
 		printf("Svi kandidati:");
 	}
-	else if (izbor == 2)
+	else if (izbor == 2 && !user->glasao)
 	{
 		ocisti_ekran();
 		printf("Glasajte za svog kandidata: ");
+	}
+	else if (user->glasao) 
+	{
+		printf("Greska, vec ste glasali, i ne mozete opet");
 	}
 	else
 	{
@@ -76,7 +80,7 @@ void pocetni_ekran(User* user)
 		printf("Odaberite broj 1 ili 2 i pritisnite Enter: ");
 
 		ret = scanf_s("%d", &izbor);
-		if (ret != 1 || izbor != 1 || izbor != 2) {
+		if (ret != 1 || (izbor != 1 && izbor != 2)) {
 			ocisti_ekran();
 			nacrtaj_pocetni_ekran();
 			printf("Greska: unos mora biti broj 1 ili 2\n");
@@ -84,7 +88,7 @@ void pocetni_ekran(User* user)
 			int c;
 			while ((c = getchar()) != '\n' && c != EOF) {}
 		}
-	} while (ret != 1 || izbor != 1);
+	} while (ret != 1 || (izbor != 1 && izbor != 2));
 	if (izbor == 1)
 	{
 		ocisti_ekran();
@@ -92,6 +96,7 @@ void pocetni_ekran(User* user)
 	}
 	else if (izbor == 2)
 	{
-		printf("Tess");
+		ocisti_ekran();
+		prijavite_se(&user);
 	}
 }

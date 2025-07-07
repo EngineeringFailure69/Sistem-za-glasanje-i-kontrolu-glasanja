@@ -41,7 +41,7 @@ void kreiranje_naloga(User* user)
 				printf("Nalog uspesno kreiran, redirektovanje na pocetnu stranicu...\n");
 				Sleep(2000);
 				ocisti_ekran();
-				korisnicki_ekran();
+				korisnicki_ekran(user);
 				uspesno_zavrseno = true;
 				return;
 			}
@@ -58,6 +58,45 @@ void kreiranje_naloga(User* user)
 		else
 		{
 			printf("Greska prilikom kreiranja naloga, uneti podaci ne postoje kao registrovani, molimo pokusajte opet\n");
+			Sleep(2000);
+			ocisti_ekran();
+			ocisti_podatke(user);
+			continue;
+		}
+	}
+}
+
+void prijavite_se(User* user) 
+{
+	bool uspesno_zavrseno = false;
+	while (!uspesno_zavrseno)
+	{
+		printf("Prijavite se na vas nalog popunjavanjem svih podataka, svi podaci su obavezni: \n\n");
+		ocisti_podatke(user);
+		unesi_podatke(user);
+		// Ispis unetih vrednosti radi provere
+		bool uspesno_logovanje = korisnik_vec_postoji(*user, true);
+		if (uspesno_logovanje)
+		{
+			printf("\nPrijavljivanje uspesno, vasi podaci:\n");
+			printf("JMBG: %s\n", user->jmbg);
+			printf("Ime: %s\n", user->imeKorisnika);
+			printf("Prezime: %s\n", user->prezimeKorisnika);
+			printf("Email: %s\n", user->email);
+			printf("Broj telefona: %s\n", user->brojTelefona);
+			printf("Sifra: %s\n", user->sifra);
+			printf("Vas glasacki broj: %s\n", user->glasackiBroj);
+			printf("Vas tip korisnika: %s\n\n", user->tipKorisnika);
+			printf("Redirektovanje na pocetnu stranicu...\n");
+			Sleep(2000);
+			ocisti_ekran();
+			korisnicki_ekran(user);
+			uspesno_zavrseno = true;
+			return;
+		}
+		else
+		{
+			printf("Greska prilikom prijavljivanja na vas nalog, uneti podaci ne postoje kao registrovani, molimo pokusajte opet\n");
 			Sleep(2000);
 			ocisti_ekran();
 			ocisti_podatke(user);

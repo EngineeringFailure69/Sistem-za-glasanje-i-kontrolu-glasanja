@@ -107,7 +107,7 @@ char* citaj_unos()
 bool upisi_podatke_u_fajl(User user)
 {
 	int upisano = 0;
-	if (!korisnik_vec_postoji(user))
+	if (!korisnik_vec_postoji(user, false))
 	{
 		FILE* fajl;
 		fajl = fopen("registrovani_korisnici.bin", "ab");
@@ -158,7 +158,7 @@ void procitaj_podatke_iz_fajla()
 	fclose(fajl);
 }
 
-bool korisnik_vec_postoji(User korisnik_koji_se_registruje)
+bool korisnik_vec_postoji(User korisnik_koji_se_registruje, bool prijavljivanje)
 {
 	User user;
 	FILE* fajl;
@@ -169,25 +169,81 @@ bool korisnik_vec_postoji(User korisnik_koji_se_registruje)
 	}
 	while (fread(&user, sizeof(user), 1, fajl) == 1)
 	{
-		if (strcmp(korisnik_koji_se_registruje.jmbg, user.jmbg) == 0)
+		if (prijavljivanje)
 		{
-			fclose(fajl);
-			return true;
+			if (strcmp(korisnik_koji_se_registruje.jmbg, user.jmbg) == 0 && strcmp(korisnik_koji_se_registruje.imeKorisnika, user.imeKorisnika) == 0
+				&& strcmp(korisnik_koji_se_registruje.prezimeKorisnika, user.prezimeKorisnika) == 0 && strcmp(korisnik_koji_se_registruje.sifra, user.sifra) == 0
+				&& strcmp(korisnik_koji_se_registruje.email, user.email) == 0 && strcmp(korisnik_koji_se_registruje.brojTelefona, user.brojTelefona) == 0 &&
+				strcmp(korisnik_koji_se_registruje.glasackiBroj, user.glasackiBroj) == 0) 
+			{
+				fclose(fajl);
+				return true;
+			}
+			else if (strcmp(korisnik_koji_se_registruje.jmbg, user.jmbg) != 0) 
+			{
+				fclose(fajl);
+				printf("Uneli ste pogresan jmbg\n");
+				return false;
+			}
+			else if (strcmp(korisnik_koji_se_registruje.imeKorisnika, user.imeKorisnika) != 0)
+			{
+				fclose(fajl);
+				printf("Uneli ste pogresano ime\n");
+				return false;
+			}
+			else if (strcmp(korisnik_koji_se_registruje.prezimeKorisnika, user.prezimeKorisnika) != 0)
+			{
+				fclose(fajl);
+				printf("Uneli ste pogresano prezime\n");
+				return false;
+			}
+			else if (strcmp(korisnik_koji_se_registruje.sifra, user.sifra) != 0)
+			{
+				fclose(fajl);
+				printf("Uneli ste pogresnu sifru\n");
+				return false;
+			}
+			else if (strcmp(korisnik_koji_se_registruje.email, user.email) != 0)
+			{
+				fclose(fajl);
+				printf("Uneli ste pogresan email\n");
+				return false;
+			}
+			else if (strcmp(korisnik_koji_se_registruje.brojTelefona, user.brojTelefona) != 0)
+			{
+				fclose(fajl);
+				printf("Uneli ste pogresan broj telefona\n");
+				return false;
+			}
+			else if (strcmp(korisnik_koji_se_registruje.glasackiBroj, user.glasackiBroj) != 0)
+			{
+				fclose(fajl);
+				printf("Uneli ste pogresan glasacki broj\n");
+				return false;
+			}
 		}
-		if (strcmp(korisnik_koji_se_registruje.email, user.email) == 0)
+		else 
 		{
-			fclose(fajl);
-			return true;
-		}
-		if (strcmp(korisnik_koji_se_registruje.brojTelefona, user.brojTelefona) == 0)
-		{
-			fclose(fajl);
-			return true;
-		}
-		if (strcmp(korisnik_koji_se_registruje.glasackiBroj, user.glasackiBroj) == 0)
-		{
-			fclose(fajl);
-			return true;
+			if (strcmp(korisnik_koji_se_registruje.jmbg, user.jmbg) == 0)
+			{
+				fclose(fajl);
+				return true;
+			}
+			if (strcmp(korisnik_koji_se_registruje.email, user.email) == 0)
+			{
+				fclose(fajl);
+				return true;
+			}
+			if (strcmp(korisnik_koji_se_registruje.brojTelefona, user.brojTelefona) == 0)
+			{
+				fclose(fajl);
+				return true;
+			}
+			if (strcmp(korisnik_koji_se_registruje.glasackiBroj, user.glasackiBroj) == 0)
+			{
+				fclose(fajl);
+				return true;
+			}
 		}
 	}
 	fclose(fajl);
@@ -208,6 +264,7 @@ void unesi_podatke(User* user)
 	user->tipKorisnika[strcspn(user->tipKorisnika, "\r\n")] = '\0';
 	strncpy(user->tipKorisnika, "user", 5);
 	user->tipKorisnika[4] = '\0';
+	user->glasao = false;
 	
 	do
 	{
@@ -242,7 +299,7 @@ void unesi_podatke(User* user)
 			ocisti_ekran();
 			printf("Svi podaci su obavezni: \n\n");
 			printf("JMBG: %s\n", user->jmbg);
-			printf("Greska pri unosu, ime mora imati od 1 do 15 karaktera i ne sme sadrzati brojeve i specijalne karaktere\n");
+			printf("Greska pri unosu, ime mora imati od 1 do 14 karaktera i ne sme sadrzati brojeve i specijalne karaktere\n");
 			free(input);
 			input = NULL;
 		}
@@ -269,7 +326,7 @@ void unesi_podatke(User* user)
 			printf("Svi podaci su obavezni: \n\n");
 			printf("JMBG: %s\n", user->jmbg);
 			printf("Ime: %s\n", user->imeKorisnika);
-			printf("Greska pri unosu, prezime mora imati od 1 do 30 karaktera i ne sme sadrzati brojeve i specijalne karaktere\n");
+			printf("Greska pri unosu, prezime mora imati od 1 do 29 karaktera i ne sme sadrzati brojeve i specijalne karaktere\n");
 			free(input);
 			input = NULL;
 		}
@@ -297,7 +354,7 @@ void unesi_podatke(User* user)
 			printf("JMBG: %s\n", user->jmbg);
 			printf("Ime: %s\n", user->imeKorisnika);
 			printf("Prezime: %s\n", user->prezimeKorisnika);
-			printf("Greska pri unosu, email mora imati od 1 do 50 karaktera, i mora biti u formatu primer@gmail.com\n");
+			printf("Greska pri unosu, email mora imati od 1 do 49 karaktera, i mora biti u formatu primer@gmail.com\n");
 			free(input);
 			input = NULL;
 	
@@ -355,7 +412,7 @@ void unesi_podatke(User* user)
 			printf("Prezime: %s\n", user->prezimeKorisnika);
 			printf("Email: %s\n", user->email);
 			printf("Broj telefona: %s\n", user->brojTelefona);
-			printf("Greska pri unosu, sifra mora imati minimum duzinu 10, a maksimum 1024, i mora sadrzati bar jedno slovo sadrzati ili specijalni karakter\n");
+			printf("Greska pri unosu, sifra mora imati minimum duzinu 10, a maksimum 1023, i mora sadrzati bar jedno slovo sadrzati ili specijalni karakter\n");
 			free(input);
 			input = NULL;
 		}

@@ -24,7 +24,7 @@
     <ClCompile Include="Utils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="KreiranjeNaloga.c">
+    <ClCompile Include="KreiranjeNalogaIPrijavljivanje.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Ekrani.c">
@@ -44,7 +44,7 @@
     <ClInclude Include="Include.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="KreiranjeNaloga.h">
+    <ClInclude Include="KreiranjeNalogaIPrijavljivanje.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Ekrani.h">

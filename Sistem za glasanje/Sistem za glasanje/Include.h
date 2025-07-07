@@ -22,5 +22,5 @@
 #include"DrawFunkcije.h"
 #include"Utils.h"
 #include "Strukture.h"
-#include "KreiranjeNaloga.h"
+#include "KreiranjeNalogaIPrijavljivanje.h"
 #include "Ekrani.h"

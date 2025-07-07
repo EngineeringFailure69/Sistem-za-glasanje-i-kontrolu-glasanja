@@ -21,7 +21,7 @@
   <ItemGroup>
     <ClCompile Include="DrawFunkcije.c" />
     <ClCompile Include="Ekrani.c" />
-    <ClCompile Include="KreiranjeNaloga.c" />
+    <ClCompile Include="KreiranjeNalogaIPrijavljivanje.c" />
     <ClCompile Include="Source.c" />
     <ClCompile Include="Utils.c" />
   </ItemGroup>
@@ -29,7 +29,7 @@
     <ClInclude Include="DrawFunkcije.h" />
     <ClInclude Include="Ekrani.h" />
     <ClInclude Include="Include.h" />
-    <ClInclude Include="KreiranjeNaloga.h" />
+    <ClInclude Include="KreiranjeNalogaIPrijavljivanje.h" />
     <ClInclude Include="Strukture.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>

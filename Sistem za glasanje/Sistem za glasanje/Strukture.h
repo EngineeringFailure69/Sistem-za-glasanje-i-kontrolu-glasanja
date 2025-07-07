@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h>
+
 typedef struct
 {
 	int redniBroj;
@@ -17,6 +19,7 @@ typedef struct
 	char email[50];
 	char brojTelefona[11];
 	char glasackiBroj[7];
+	bool glasao;
 }User;
 
 typedef struct

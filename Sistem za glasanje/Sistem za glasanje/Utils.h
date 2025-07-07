@@ -9,7 +9,7 @@ char* formatiraj_string(char* s);
 char* citaj_unos();
 bool upisi_podatke_u_fajl(User user);
 void procitaj_podatke_iz_fajla(); //Vise je kao test funkcija
-bool korisnik_vec_postoji(User korisnik_koji_se_registruje);
+bool korisnik_vec_postoji(User korisnik_koji_se_registruje, bool prijavljivanje);
 int izbroj_cifre(int number);
 bool email_je_ispravno_formatiran(char* s);
 void unesi_podatke(User* user);
