@@ -4,9 +4,12 @@
 
 typedef struct
 {
+	char punNazivStranke[100];
+	char skracenica[6];
+	char imeLidera[30];
+	char prezimeLidera[30];
 	int redniBroj;
-	char nazivStranke[100];
-	char liderStranke[50];
+	int brojGlasova;
 }Kandidat;
 
 typedef struct

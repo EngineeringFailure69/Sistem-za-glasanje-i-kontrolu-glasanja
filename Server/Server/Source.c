@@ -13,9 +13,6 @@
 // Potrebno je linkovati Ws2_32.lib
 #pragma comment(lib, "Ws2_32.lib")
 
-#define DEFAULT_PORT "27015"
-#define DRUGI_PORT "27016"
-
 // Definicija strukture User – ista na klijentu i serveru
 typedef struct
 {
@@ -84,7 +81,7 @@ bool kandidat_je_vec_upisan(Kandidat kandidat_koji_se_registruje)
 
 void obradi_usera(SOCKET ClientSocket) 
 {
-    // 1. Primanje tacno sizeof(User) bajtova
+    // 8. Primanje tacno sizeof(User) bajtova
     User primljeni;
     int total = 0;
     int expected = sizeof(User);
@@ -117,14 +114,14 @@ void obradi_usera(SOCKET ClientSocket)
         primljeni.brojTelefona[sizeof primljeni.brojTelefona - 1] = '\0';
         primljeni.glasackiBroj[sizeof primljeni.glasackiBroj - 1] = '\0';
 
-        // 2.Provera iz fajla
+        // 9.Provera iz fajla
         bool postoji = birac_postoji(primljeni);
         printf("Provera korisnika: %s\n", postoji ? "POSTOJI" : "NE POSTOJI");
 
-        // 3. odgovor – jedan bajt
+        // 10. odgovor – jedan bajt
         char resp = postoji ? 1 : 0;
 
-        // 4. Slanje jednog bajta
+        // 11. Slanje jednog bajta
         int sent = 0;
         while (sent < 1) {
             int iResult = send(ClientSocket, (const char*)&resp + sent, 1 - sent, 0);
@@ -140,7 +137,7 @@ void obradi_usera(SOCKET ClientSocket)
         }
     }
 
-    // 5. Zatvoranje konekcije sa tim klijentom
+    // 12. Zatvoranje konekcije sa tim klijentom
     closesocket(ClientSocket);
     printf("Konekcija sa klijentom zatvorena\n");
 }
@@ -176,7 +173,7 @@ bool upisi_podatke_u_fajl(Kandidat kandidat)
 
 void obradi_admina(SOCKET ClientSocket)
 {
-    // 1. Primanje tacno sizeof(Kandidat) bajtova
+    // 8. Primanje tacno sizeof(Kandidat) bajtova
     Kandidat primljeni;
     int total = 0;
     int expected = sizeof(Kandidat);
@@ -209,14 +206,14 @@ void obradi_admina(SOCKET ClientSocket)
         primljeni.prezimeLidera[sizeof primljeni.prezimeLidera - 1] = '\0';
         primljeni.brojGlasova = 0;
 
-        // 2.Provera iz fajla
+        // 9.Provera iz fajla
         bool upisan = upisi_podatke_u_fajl(primljeni);
         printf("Provera korisnika: %s\n", upisan ? "UPISAN" : "NIJE UPISAN");
 
-        // 3. odgovor – jedan bajt
+        // 10. odgovor – jedan bajt
         char resp = upisan ? 1 : 0;
 
-        // 4. Slanje jednog bajta
+        // 11. Slanje jednog bajta
         int sent = 0;
         while (sent < 1) {
             int iResult = send(ClientSocket, (const char*)&resp + sent, 1 - sent, 0);
@@ -232,28 +229,54 @@ void obradi_admina(SOCKET ClientSocket)
         }
     }
 
-    // 5. Zatvoranje konekcije sa tim klijentom
+    // 12. Zatvoranje konekcije sa tim klijentom
     closesocket(ClientSocket);
     printf("Konekcija sa klijentom zatvorena\n");
 }
 
-int __cdecl main(void)
+bool salji_sve_kandidate(SOCKET ConnectSocket)
 {
-    WSADATA wsaData;
+    Kandidat kandidat;
+    FILE* fajl;
+    fajl = fopen("registrovani_kandidati.bin", "rb");
+    if (fajl == NULL)
+    {
+        fprintf(stderr, "Greska prilikom otvaranja fajla!\n");
+        return false;
+    }
+    while (fread(&kandidat, sizeof(kandidat), 1, fajl) == 1)
+    {
+        // Saljem celu strukturu Kandidat
+        int sent = 0;
+        int to_send = sizeof(Kandidat);
+        const char* bufptr = (const char*)&kandidat;
+        while (sent < to_send) 
+        {
+            int iResult = send(ConnectSocket, bufptr + sent, to_send - sent, 0);
+            if (iResult == SOCKET_ERROR) 
+            {
+                printf("send neuspesan sa greskom: %d\n", WSAGetLastError());
+                fclose(fajl);
+                return false;
+            }
+            sent += iResult;
+        }
+    }
+    fclose(fajl);
+    // signal kraj podataka
+    if (shutdown(ConnectSocket, SD_SEND) == SOCKET_ERROR)
+        fprintf(stderr, "shutdown failed: %d\n", WSAGetLastError());
+    return true;
+}
+
+SOCKET kreiraj_soket(const char* port) 
+{
     int iResult;
 
-    SOCKET ListenSocket1 = INVALID_SOCKET;
-    SOCKET ListenSocket2 = INVALID_SOCKET;
+    SOCKET ListenSocket = INVALID_SOCKET;
 
-    struct addrinfo *result1 = NULL, *result2 = NULL;
+    struct addrinfo* result = NULL;
     struct addrinfo hints;
-
-    // 1. Inicijalizacija Winsock-a
-    iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (iResult != 0) {
-        printf("WSAStartup neuspesan sa greskom: %d\n", iResult);
-        return 1;
-    }
 
     // 2. Hintovi za getaddrinfo
     ZeroMemory(&hints, sizeof(hints));
@@ -262,101 +285,83 @@ int __cdecl main(void)
     hints.ai_protocol = IPPROTO_TCP;
     hints.ai_flags = AI_PASSIVE;       // za bind
 
-    //-------------------Port za user------------------------------------
     //Ovako se svaki put otvara drugi port za slanje podataka, ovo iznad uvek ostaje isto i radi se samo jednom
 
     // 3. Resolve server adrese i port
-    iResult = getaddrinfo(NULL, DEFAULT_PORT, &hints, &result1);
+    iResult = getaddrinfo(NULL, port, &hints, &result);
     if (iResult != 0) {
         printf("getaddrinfo neuspesan sa greskom: %d\n", iResult);
         WSACleanup();
-        return 1;
+        return INVALID_SOCKET;
     }
 
     // 4. Socket za slusanje
-    ListenSocket1 = socket(result1->ai_family, result1->ai_socktype, result1->ai_protocol);
-    if (ListenSocket1 == INVALID_SOCKET) {
+    ListenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+    if (ListenSocket == INVALID_SOCKET) {
         printf("socket1 user neuspesan sa greskom: %ld\n", WSAGetLastError());
-        freeaddrinfo(result1);
+        freeaddrinfo(result);
         WSACleanup();
-        return 1;
+        return INVALID_SOCKET;
     }
 
     // 5. Bind socket na port
-    iResult = bind(ListenSocket1, result1->ai_addr, (int)result1->ai_addrlen);
+    iResult = bind(ListenSocket, result->ai_addr, (int)result->ai_addrlen);
     if (iResult == SOCKET_ERROR) {
         printf("bind1 neuspesan sa greskom: %d\n", WSAGetLastError());
-        freeaddrinfo(result1);
-        closesocket(ListenSocket1);
+        freeaddrinfo(result);
+        closesocket(ListenSocket);
         WSACleanup();
-        return 1;
+        return INVALID_SOCKET;
     }
-    freeaddrinfo(result1);
+    freeaddrinfo(result);
 
     // 6. Listen
-    iResult = listen(ListenSocket1, SOMAXCONN);
+    iResult = listen(ListenSocket, SOMAXCONN);
     if (iResult == SOCKET_ERROR) {
         printf("listen neuspesan sa greskom: %d\n", WSAGetLastError());
-        closesocket(ListenSocket1);
+        closesocket(ListenSocket);
         WSACleanup();
-        return 1;
+        return INVALID_SOCKET;
     }
 
     // Provera na kom portu slusa server
-    printf("Server slusa na portu %s.\n", DEFAULT_PORT);
-
-    //----------------------------------Drugi port za admin-------------------------------------
-
-    //1.
-    iResult = getaddrinfo(NULL, DRUGI_PORT, &hints, &result2);
-    if (iResult != 0) 
+    printf("Server slusa na portu %s.\n", port);
+    return ListenSocket;
+}
+   
+int __cdecl main(void)
+{
+    /// 1. Inicijalizacija Winsock-a
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) 
     {
-        printf("getaddrinfo neuspesan sa greskom: %d\n", iResult);
-        WSACleanup();
+        fprintf(stderr, "WSAStartup neuspesan\n");
         return 1;
     }
 
-    //2.
-    ListenSocket2 = socket(result2->ai_family, result2->ai_socktype, result2->ai_protocol);
-    if (ListenSocket2 == INVALID_SOCKET) 
+    const char* portovi[] = {"27015", "27016", "27017"};
+
+    SOCKET ListenSocket1 = kreiraj_soket(portovi[0]);
+    SOCKET ListenSocket2 = kreiraj_soket(portovi[1]);
+    SOCKET ListenSocket3 = kreiraj_soket(portovi[2]);
+    if (ListenSocket1 == INVALID_SOCKET || ListenSocket2 == INVALID_SOCKET || ListenSocket3 == INVALID_SOCKET)
     {
-        printf("socket2 user neuspesan sa greskom: %ld\n", WSAGetLastError());
-        freeaddrinfo(result2);
+        printf("Greska na nekom od soketa: %ld\n", WSAGetLastError());
         WSACleanup();
         return 1;
     }
-
-    // 3. 
-    iResult = bind(ListenSocket2, result2->ai_addr, (int)result2->ai_addrlen);
-    if (iResult == SOCKET_ERROR) {
-        printf("bind2 neuspesan sa greskom: %d\n", WSAGetLastError());
-        freeaddrinfo(result2);
-        closesocket(ListenSocket2);
-        WSACleanup();
-        return 1;
-    }
-    freeaddrinfo(result2);
-
-    //4.
-    iResult = listen(ListenSocket2, SOMAXCONN);
-    if (iResult == SOCKET_ERROR) {
-        printf("liste2 neuspesan sa greskom: %d\n", WSAGetLastError());
-        closesocket(ListenSocket2);
-        WSACleanup();
-        return 1;
-    }
-
-    // Provera na kom portu slusa server
-    printf("Server slusa na portu %s.\n", DRUGI_PORT);
 
     //Ovako se obradjuje slanje i prijem podataka/odgovora 
     fd_set readSet;
-    SOCKET maxSock = (ListenSocket1 > ListenSocket2 ? ListenSocket1 : ListenSocket2);
+    SOCKET maxSock = ListenSocket1;
+    if (ListenSocket2 > maxSock) maxSock = ListenSocket2;
+    if (ListenSocket3 > maxSock) maxSock = ListenSocket3;
 
     while (1) {
         FD_ZERO(&readSet);
         FD_SET(ListenSocket1, &readSet);
         FD_SET(ListenSocket2, &readSet);
+        FD_SET(ListenSocket3, &readSet);
 
         int rc = select((int)maxSock + 1, &readSet, NULL, NULL, NULL);
         if (rc == SOCKET_ERROR) {
@@ -365,28 +370,46 @@ int __cdecl main(void)
         }
 
         // nova konekcija na prvom portu
-        if (FD_ISSET(ListenSocket1, &readSet)) {
+        if (FD_ISSET(ListenSocket1, &readSet)) 
+        {
             SOCKET ClientSocket = accept(ListenSocket1, NULL, NULL);
-            if (ClientSocket != INVALID_SOCKET) {
-                printf("Prihvacena konekcija na portu %s (user aplikacija)\n", DRUGI_PORT);
+            if (ClientSocket != INVALID_SOCKET) 
+            {
+                printf("Prihvacena konekcija na portu %s (user aplikacija)\n", portovi[0]);
                 obradi_usera(ClientSocket);
             }
         }
         // nova konekcija na drugom portu
-        if (FD_ISSET(ListenSocket2, &readSet)) {
+        if (FD_ISSET(ListenSocket2, &readSet)) 
+        {
             SOCKET ClientSocket = accept(ListenSocket2, NULL, NULL);
-            if (ClientSocket != INVALID_SOCKET) {
-                printf("Prihvacena konekcija na portu %s (admin aplikacija)\n", DRUGI_PORT);
+            if (ClientSocket != INVALID_SOCKET) 
+            {
+                printf("Prihvacena konekcija na portu %s (admin aplikacija)\n", portovi[1]);
                 //Ovde pozovite funkciju za obradu druge aplikacije,
                 obradi_admina(ClientSocket);
                 closesocket(ClientSocket);  // za sada samo zatvaramo
             }
         }
+        // nova konekcija na trecem portu
+        if (FD_ISSET(ListenSocket3, &readSet))
+        {
+            SOCKET ClientSocket = accept(ListenSocket3, NULL, NULL);
+            if (ClientSocket != INVALID_SOCKET)
+            {
+                printf("Prihvacena konekcija na portu %s (admin ili user aplikacija)\n", portovi[2]);
+                //Ovde pozovite funkciju za obradu druge aplikacije,
+                if(!salji_sve_kandidate(ClientSocket))
+                    fprintf(stderr, "Greska pri slanju kandidata\n");
+                closesocket(ClientSocket);  // za sada samo zatvaramo
+            }
+        }
     }
 
-    // 5. Cleanup
+    // 13. Cleanup
     closesocket(ListenSocket1);
     closesocket(ListenSocket2);
+    closesocket(ListenSocket3);
     WSACleanup();
     return 0;
 }

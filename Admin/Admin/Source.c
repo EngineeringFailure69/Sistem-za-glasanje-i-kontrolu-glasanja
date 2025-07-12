@@ -6,7 +6,6 @@
 #pragma comment (lib, "AdvApi32.lib")
 
 #define DEFAULT_BUFLEN 512
-#define DEFAULT_PORT "27016"
 #define SERVER_ADDRESS "127.0.0.1"
 
 #include<stdio.h>
@@ -39,7 +38,8 @@ void ocisti_podatke(Kandidat* kandidat);
 void kreiranje_kandidata(Kandidat* kandidat);
 void pocetni_ekran(Kandidat* kandidat);
 void nacrtaj_pocetni_ekran();
-void procitaj_podatke_iz_fajla();;
+SOCKET kreiraj_soket(const char* port);
+void citanje_svih_kandidata();
 
 void ocisti_ekran()
 {
@@ -102,54 +102,14 @@ bool string_sadrzi_brojeve_i_specijalne_karaktere(const char* s, bool imePrezime
 }
 
 bool posalji_podatke_za_upis(const Kandidat* kandidat) {
-	WSADATA wsaData;
-	SOCKET ConnectSocket = INVALID_SOCKET;
-	struct addrinfo* result = NULL, * ptr = NULL, hints;
+	SOCKET ConnectSocket = kreiraj_soket("27016");
+	if (ConnectSocket == INVALID_SOCKET) 
+	{
+		printf("Greska prilikom kreiranja soketa: %ld\n", WSAGetLastError());
+		WSACleanup();
+		return false;
+	}
 	int iResult;
-
-	// Inicijalizacija Winsock
-	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (iResult != 0) {
-		printf("WSAStartup neuspesan sa greskom: %d\n", iResult);
-		return false;
-	}
-
-	ZeroMemory(&hints, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
-
-	// Adresa servera i port
-	iResult = getaddrinfo(SERVER_ADDRESS, DEFAULT_PORT, &hints, &result);
-	if (iResult != 0) {
-		printf("getaddrinfo neuspesan sa greskom: %d\n", iResult);
-		WSACleanup();
-		return false;
-	}
-
-	// Pokusaj povezivanja 
-	for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
-		ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
-		if (ConnectSocket == INVALID_SOCKET) {
-			printf("socket neuspesan sa greskom: %ld\n", WSAGetLastError());
-			WSACleanup();
-			return false;
-		}
-		iResult = connect(ConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
-		if (iResult == SOCKET_ERROR) {
-			closesocket(ConnectSocket);
-			ConnectSocket = INVALID_SOCKET;
-			continue;
-		}
-		break;
-	}
-	freeaddrinfo(result);
-
-	if (ConnectSocket == INVALID_SOCKET) {
-		printf("Neuspesna konekcija na server!\n");
-		WSACleanup();
-		return false;
-	}
 
 	// Saljem celu strukturu Kandidat
 	int total = 0;
@@ -393,6 +353,8 @@ void kreiranje_kandidata(Kandidat* kandidat)
 			printf("Kandidat uspesno kreiran, redirektovanje na pocetnu stranicu...\n");
 			Sleep(2000);
 			ocisti_ekran();
+			ocisti_podatke(kandidat);
+			pocetni_ekran(kandidat);
 			uspesno_zavrseno = true;
 			return;
 		}
@@ -412,22 +374,28 @@ void pocetni_ekran(Kandidat* kandidat)
 	int izbor, ret;
 	nacrtaj_pocetni_ekran();
 	do {
-		printf("Odaberite broj 1 i pritisnite Enter: ");
+		printf("Odaberite broj 1 ili 2 i pritisnite Enter: ");
 
 		ret = scanf_s("%d", &izbor);
-		if (ret != 1 || izbor != 1) {
+		if (ret != 1 || (izbor != 1 && izbor != 2)) {
 			ocisti_ekran();
 			nacrtaj_pocetni_ekran();
-			printf("Greska: unos mora biti broj 1\n");
+			printf("Greska: unos mora biti broj 1 ili 2\n");
 			// ocistimo ulazni bafer tako sto uklanjamo karaktere iz ulaza dok ne dodjemo do \n ili EOF
 			int c;
 			while ((c = getchar()) != '\n' && c != EOF) {}
 		}
-	} while (ret != 1 || izbor != 1);
+	} while (ret != 1 || (izbor != 1 && izbor != 2));
 	if (izbor == 1)
 	{
 		ocisti_ekran();
 		kreiranje_kandidata(&kandidat);
+	}
+	if (izbor == 2) 
+	{
+		ocisti_ekran();
+		printf("Svi kandidati: \n\n");
+		citanje_svih_kandidata();
 	}
 }
 
@@ -435,31 +403,106 @@ void nacrtaj_pocetni_ekran()
 {
 	printf("\t\tDobrodosli u elektronski sistem za glasanje i kontrolu glasanja u Republici Srbiji\n\n");
 	printf("\t\t\t -----------------------------------------------\n");
-	printf("\t\t\t|\t\t\t\t\t\t|\n\t\t\t| 1) Kreirajte kandidata  \t\t\t|\n\t\t\t|\t\t\t\t\t\t|\n");
+	printf("\t\t\t|\t\t\t\t\t\t|\n\t\t\t| 1) Kreiranjte kandidata  \t\t\t|\n\t\t\t|\t\t\t\t\t\t|\n");
+	printf("\t\t\t|\t\t\t\t\t\t|\n\t\t\t|                                            \t|\n\t\t\t|\t\t\t\t\t\t|\n");
+	printf("\t\t\t|\t\t\t\t\t\t|\n\t\t\t| 2) Procitajte sve kandidate \t\t\t|\n\t\t\t|\t\t\t\t\t\t|\n");
 	printf("\t\t\t -----------------------------------------------\n\n");
 }
 
-void procitaj_podatke_iz_fajla()
+SOCKET kreiraj_soket(const char* port) 
 {
-	Kandidat kandidat;
-	FILE* fajl;
-	fajl = fopen("registrovani_kandidati.bin", "rb");
-	if (fajl == NULL)
-	{
-		fprintf(stderr, "Greska prilikom otvaranja fajla!\n");
-		return;
+	WSADATA wsaData;
+	SOCKET ServerSocket = INVALID_SOCKET;
+	struct addrinfo* result = NULL, hints;
+	const char* imeServera = "127.0.0.1";   // ili IP/adresa tvog servera
+	const char* portServera = port;       // ili port na kojem server slusa
+
+	// 1) Inicijalizacija Winsock-a
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+		fprintf(stderr, "WSAStartup neuspesan\n");
+		return INVALID_SOCKET;
 	}
-	while (fread(&kandidat, sizeof(kandidat), 1, fajl) == 1)
-	{
-		printf("Naziv stranke: %s\n", kandidat.punNazivStranke);
-		printf("Skracenica: %s\n", kandidat.skracenica);
-		printf("Ime lidera: %s\n", kandidat.imeLidera);
-		printf("Prezime lidera: %s\n", kandidat.prezimeLidera);
-		printf("Redni broj: %d\n", kandidat.redniBroj);
-		printf("Broj glasova: %d\n", kandidat.brojGlasova);
-		printf("\n");
+
+	// 2) Priprema getaddrinfo
+	ZeroMemory(&hints, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+
+	if (getaddrinfo(imeServera, portServera, &hints, &result) != 0) {
+		fprintf(stderr, "getaddrinfo neuspesan\n");
+		WSACleanup();
+		return INVALID_SOCKET;
 	}
-	fclose(fajl);
+
+	// 3) Kreiranje socket-a
+	ServerSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+	if (ServerSocket == INVALID_SOCKET) {
+		fprintf(stderr, "socket neuspesan: %d\n", WSAGetLastError());
+		freeaddrinfo(result);
+		WSACleanup();
+		return INVALID_SOCKET;
+	}
+
+	// 4) Povezivanje na server
+	if (connect(ServerSocket, result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR) {
+		fprintf(stderr, "connect neuspesan: %d\n", WSAGetLastError());
+		closesocket(ServerSocket);
+		freeaddrinfo(result);
+		WSACleanup();
+		return INVALID_SOCKET;
+	}
+	freeaddrinfo(result);
+
+	return ServerSocket;
+}
+
+void citanje_svih_kandidata()
+{
+	//Primanje tacno sizeof(Kandidat) bajtova
+	SOCKET ServerSocket = kreiraj_soket("27017");
+	Kandidat primljeni;
+	int total = 0;
+	int expected = sizeof(Kandidat);
+	char* bufptr;
+	while (1)
+	{
+		total = 0;
+		bufptr = (char*)&primljeni;
+		while (total < expected)
+		{
+			int iResult = recv(ServerSocket, bufptr + total, expected - total, 0);
+			if (iResult > 0)
+			{
+				total += iResult;
+			}
+			else if (iResult == 0)
+			{
+				// server je pozvao shutdown(SD_SEND) ili zatvorio socket
+				return;
+			}
+			else
+			{
+				printf("recv neuspesan, greska: %d\n", WSAGetLastError());
+				return;
+			}
+		}
+		// Null-terminate polja
+		primljeni.punNazivStranke[sizeof primljeni.punNazivStranke - 1] = '\0';
+		primljeni.skracenica[sizeof primljeni.skracenica - 1] = '\0';
+		primljeni.imeLidera[sizeof primljeni.imeLidera - 1] = '\0';
+		primljeni.prezimeLidera[sizeof primljeni.prezimeLidera - 1] = '\0';
+
+		printf("Naziv stranke: %s\n", primljeni.punNazivStranke);
+		printf("Skracenica: %s\n", primljeni.skracenica);
+		printf("Ime lidera: %s\n", primljeni.imeLidera);
+		printf("Prezime lidera: %s\n", primljeni.prezimeLidera);
+		printf("Redni broj: %d\n", primljeni.redniBroj);
+		printf("Broj glasova: %d\n\n", primljeni.brojGlasova);
+	}
+	// 6) Zatvori konekciju i ocisti Winsock
+	closesocket(ServerSocket);
+	WSACleanup();
 }
 
 int main() 

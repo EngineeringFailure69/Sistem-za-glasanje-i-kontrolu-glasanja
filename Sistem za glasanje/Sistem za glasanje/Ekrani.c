@@ -20,7 +20,8 @@ void korisnicki_ekran(User* user)
 	if (izbor == 1)
 	{
 		ocisti_ekran();
-		printf("Svi kandidati:");
+		printf("Svi kandidati:\n\n");
+		citanje_svih_kandidata();
 	}
 	else if (izbor == 2 && !user->glasao)
 	{

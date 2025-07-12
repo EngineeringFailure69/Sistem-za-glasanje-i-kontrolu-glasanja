@@ -466,3 +466,99 @@ void ocisti_podatke(User* user)
 	user->glasackiBroj[0] = '\0';
 	user->tipKorisnika[0] = '\0';
 }
+
+SOCKET kreiraj_soket()
+{
+	WSADATA wsaData;
+	SOCKET ServerSocket = INVALID_SOCKET;
+	struct addrinfo* result = NULL, hints;
+	const char* imeServera = "127.0.0.1";   // ili IP/adresa tvog servera
+	const char* portServera = "27017";       // ili port na kojem server slusa
+
+	// 1) Inicijalizacija Winsock-a
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+		fprintf(stderr, "WSAStartup neuspesan\n");
+		return INVALID_SOCKET;
+	}
+
+	// 2) Priprema getaddrinfo
+	ZeroMemory(&hints, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+
+	if (getaddrinfo(imeServera, portServera, &hints, &result) != 0) {
+		fprintf(stderr, "getaddrinfo neuspesan\n");
+		WSACleanup();
+		return INVALID_SOCKET;
+	}
+
+	// 3) Kreiranje socket-a
+	ServerSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+	if (ServerSocket == INVALID_SOCKET) {
+		fprintf(stderr, "socket neuspesan: %d\n", WSAGetLastError());
+		freeaddrinfo(result);
+		WSACleanup();
+		return INVALID_SOCKET;
+	}
+
+	// 4) Povezivanje na server
+	if (connect(ServerSocket, result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR) {
+		fprintf(stderr, "connect neuspesan: %d\n", WSAGetLastError());
+		closesocket(ServerSocket);
+		freeaddrinfo(result);
+		WSACleanup();
+		return INVALID_SOCKET;
+	}
+	freeaddrinfo(result);
+
+	return ServerSocket;
+}
+
+void citanje_svih_kandidata()
+{
+	//Primanje tacno sizeof(Kandidat) bajtova
+	SOCKET ServerSocket = kreiraj_soket();
+	Kandidat primljeni;
+	int total = 0;
+	int expected = sizeof(Kandidat);
+	char* bufptr;
+	while (1)
+	{
+		total = 0;
+		bufptr = (char*)&primljeni;
+		while (total < expected)
+		{
+			int iResult = recv(ServerSocket, bufptr + total, expected - total, 0);
+			if (iResult > 0)
+			{
+				total += iResult;
+			}
+			else if (iResult == 0)
+			{
+				// server je pozvao shutdown(SD_SEND) ili zatvorio socket
+				return;
+			}
+			else
+			{
+				printf("recv neuspesan, greska: %d\n", WSAGetLastError());
+				return;
+			}
+		}
+		// Null-terminate polja
+		primljeni.punNazivStranke[sizeof primljeni.punNazivStranke - 1] = '\0';
+		primljeni.skracenica[sizeof primljeni.skracenica - 1] = '\0';
+		primljeni.imeLidera[sizeof primljeni.imeLidera - 1] = '\0';
+		primljeni.prezimeLidera[sizeof primljeni.prezimeLidera - 1] = '\0';
+
+		printf("Naziv stranke: %s\n", primljeni.punNazivStranke);
+		printf("Skracenica: %s\n", primljeni.skracenica);
+		printf("Ime lidera: %s\n", primljeni.imeLidera);
+		printf("Prezime lidera: %s\n", primljeni.prezimeLidera);
+		printf("Redni broj: %d\n", primljeni.redniBroj);
+		printf("Broj glasova: %d\n\n", primljeni.brojGlasova);
+	}
+	// 6) Zatvori konekciju i ocisti Winsock
+	closesocket(ServerSocket);
+	WSACleanup();
+}

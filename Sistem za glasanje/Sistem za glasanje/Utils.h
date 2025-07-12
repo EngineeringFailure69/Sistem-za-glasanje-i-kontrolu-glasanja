@@ -14,3 +14,5 @@ int izbroj_cifre(int number);
 bool email_je_ispravno_formatiran(char* s);
 void unesi_podatke(User* user);
 void ocisti_podatke(User* user);
+SOCKET kreiraj_soket();
+void citanje_svih_kandidata();
