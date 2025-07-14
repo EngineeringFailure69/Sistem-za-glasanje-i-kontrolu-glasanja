@@ -515,7 +515,7 @@ SOCKET kreiraj_soket()
 	return ServerSocket;
 }
 
-void citanje_svih_kandidata()
+void citanje_svih_kandidata(int izbor)
 {
 	//Primanje tacno sizeof(Kandidat) bajtova
 	SOCKET ServerSocket = kreiraj_soket();
@@ -551,14 +551,46 @@ void citanje_svih_kandidata()
 		primljeni.imeLidera[sizeof primljeni.imeLidera - 1] = '\0';
 		primljeni.prezimeLidera[sizeof primljeni.prezimeLidera - 1] = '\0';
 
+		printf("Redni broj: %d\n", primljeni.redniBroj);
 		printf("Naziv stranke: %s\n", primljeni.punNazivStranke);
 		printf("Skracenica: %s\n", primljeni.skracenica);
 		printf("Ime lidera: %s\n", primljeni.imeLidera);
 		printf("Prezime lidera: %s\n", primljeni.prezimeLidera);
-		printf("Redni broj: %d\n", primljeni.redniBroj);
-		printf("Broj glasova: %d\n\n", primljeni.brojGlasova);
+		if (izbor == 3) 
+		{
+			printf("Broj glasova: %d\n", primljeni.brojGlasova);
+			float procenti = 0;
+			procenti = ((float)primljeni.brojGlasova/100000.0) * 100.0;
+			printf("Procenti glasova: %.2f\n", procenti);
+		}
+		printf("\n");
 	}
 	// 6) Zatvori konekciju i ocisti Winsock
 	closesocket(ServerSocket);
 	WSACleanup();
+}
+
+void vrati_se_nazad(User* user) 
+{
+	int vrati_se_nazad = 0, ret = 0;
+	do
+	{
+		printf("Da bi se vratili na prethodnu stranicu, unesite 0 i pritisnite 'enter': ");
+		ret = scanf_s("%d", &vrati_se_nazad);
+		if (ret != 1 || vrati_se_nazad != 0)
+		{
+			ocisti_ekran();
+			citanje_svih_kandidata(1);
+			printf("Greska: unos mora biti broj 0\n");
+			// ocistimo ulazni bafer tako sto uklanjamo karaktere iz ulaza dok ne dodjemo do \n ili EOF
+			int c;
+			while ((c = getchar()) != '\n' && c != EOF) {}
+		}
+	} while (vrati_se_nazad != 0 || ret != 1);
+	if (vrati_se_nazad == 0)
+	{
+		ocisti_ekran();
+		korisnicki_ekran(user);
+		return;
+	}
 }

@@ -16,6 +16,7 @@
 #include<Windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include<conio.h>
 
 typedef struct
 {
@@ -40,6 +41,7 @@ void pocetni_ekran(Kandidat* kandidat);
 void nacrtaj_pocetni_ekran();
 SOCKET kreiraj_soket(const char* port);
 void citanje_svih_kandidata();
+void vrati_se_nazad(Kandidat* kandidat);
 
 void ocisti_ekran()
 {
@@ -59,6 +61,13 @@ char* citaj_unos()
 		/* Provera za kraj */
 		if (ch == EOF || ch == '\n')
 			ch = 0;
+		if (ch == 27) 
+		{
+
+			free(line);
+			line = NULL;
+			return line;
+		}
 
 		/* Provera da li treba da se prosiri rezervisan prostor */
 		if (size <= index) {
@@ -193,7 +202,6 @@ char* formatiraj_string(char* s, int izbor)
 void unesi_podatke(Kandidat* kandidat)
 {
 	ocisti_podatke(kandidat);
-
 	do
 	{
 		printf("Unesite ime stranke: ");
@@ -221,7 +229,7 @@ void unesi_podatke(Kandidat* kandidat)
 
 	do
 	{
-		printf("Unesite skraenicu stranke: ");
+		printf("Unesite skracenicu stranke: ");
 		char* input = citaj_unos();
 		input[strcspn(input, "\r\n")] = '\0';
 		if (strlen(input) <= 0 || strlen(input) > 5 || string_sadrzi_brojeve_i_specijalne_karaktere(input, false))
@@ -304,7 +312,8 @@ void unesi_podatke(Kandidat* kandidat)
 	int ret;
 	do {
 		ret = scanf_s("%d", &kandidat->redniBroj);
-		if (ret != 1) {
+		if (ret != 1) 
+		{
 			ocisti_ekran();
 			printf("Svi podaci su obavezni: \n\n");
 			printf("Naziv stranke:  %s\n", kandidat->punNazivStranke);
@@ -335,6 +344,7 @@ void kreiranje_kandidata(Kandidat* kandidat)
 	bool uspesno_zavrseno = false;
 	while (!uspesno_zavrseno)
 	{
+
 		printf("Dodajte kandidata popunjavanjem svih podataka, svi podaci su obavezni: \n\n");
 		ocisti_podatke(kandidat);
 		unesi_podatke(kandidat);
@@ -389,13 +399,14 @@ void pocetni_ekran(Kandidat* kandidat)
 	if (izbor == 1)
 	{
 		ocisti_ekran();
-		kreiranje_kandidata(&kandidat);
+		kreiranje_kandidata(kandidat);
 	}
 	if (izbor == 2) 
 	{
 		ocisti_ekran();
 		printf("Svi kandidati: \n\n");
 		citanje_svih_kandidata();
+		vrati_se_nazad(kandidat);
 	}
 }
 
@@ -403,7 +414,7 @@ void nacrtaj_pocetni_ekran()
 {
 	printf("\t\tDobrodosli u elektronski sistem za glasanje i kontrolu glasanja u Republici Srbiji\n\n");
 	printf("\t\t\t -----------------------------------------------\n");
-	printf("\t\t\t|\t\t\t\t\t\t|\n\t\t\t| 1) Kreiranjte kandidata  \t\t\t|\n\t\t\t|\t\t\t\t\t\t|\n");
+	printf("\t\t\t|\t\t\t\t\t\t|\n\t\t\t| 1) Kreirajte kandidata  \t\t\t|\n\t\t\t|\t\t\t\t\t\t|\n");
 	printf("\t\t\t|\t\t\t\t\t\t|\n\t\t\t|                                            \t|\n\t\t\t|\t\t\t\t\t\t|\n");
 	printf("\t\t\t|\t\t\t\t\t\t|\n\t\t\t| 2) Procitajte sve kandidate \t\t\t|\n\t\t\t|\t\t\t\t\t\t|\n");
 	printf("\t\t\t -----------------------------------------------\n\n");
@@ -503,6 +514,31 @@ void citanje_svih_kandidata()
 	// 6) Zatvori konekciju i ocisti Winsock
 	closesocket(ServerSocket);
 	WSACleanup();
+}
+
+void vrati_se_nazad(Kandidat* kandidat)
+{
+	int vrati_se_nazad = 0, ret = 0;
+	do
+	{
+		printf("Da bi se vratili na prethodnu stranicu, unesite 0 i pritisnite 'enter': ");
+		ret = scanf_s("%d", &vrati_se_nazad);
+		if (ret != 1 || vrati_se_nazad != 0)
+		{
+			ocisti_ekran();
+			citanje_svih_kandidata();
+			printf("Greska: unos mora biti broj 0\n");
+			// ocistimo ulazni bafer tako sto uklanjamo karaktere iz ulaza dok ne dodjemo do \n ili EOF
+			int c;
+			while ((c = getchar()) != '\n' && c != EOF) {}
+		}
+	} while (vrati_se_nazad != 0 || ret != 1);
+	if (vrati_se_nazad == 0)
+	{
+		ocisti_ekran();
+		pocetni_ekran(kandidat);
+		return;
+	}
 }
 
 int main() 

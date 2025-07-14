@@ -15,4 +15,5 @@ bool email_je_ispravno_formatiran(char* s);
 void unesi_podatke(User* user);
 void ocisti_podatke(User* user);
 SOCKET kreiraj_soket();
-void citanje_svih_kandidata();
+void citanje_svih_kandidata(int izbor);
+void vrati_se_nazad(User* user);

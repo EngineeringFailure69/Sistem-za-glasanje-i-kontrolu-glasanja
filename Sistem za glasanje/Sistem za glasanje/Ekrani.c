@@ -21,12 +21,15 @@ void korisnicki_ekran(User* user)
 	{
 		ocisti_ekran();
 		printf("Svi kandidati:\n\n");
-		citanje_svih_kandidata();
+		citanje_svih_kandidata(1);
+		vrati_se_nazad(user);
 	}
 	else if (izbor == 2 && !user->glasao)
 	{
 		ocisti_ekran();
-		printf("Glasajte za svog kandidata: ");
+		printf("Glasajte za svog kandidata: \n\n");
+		citanje_svih_kandidata(2);
+		vrati_se_nazad(user);
 	}
 	else if (user->glasao) 
 	{
@@ -35,41 +38,9 @@ void korisnicki_ekran(User* user)
 	else
 	{
 		ocisti_ekran();
-		printf("Pratite rezultate: ");
-	}
-}
-
-void admin_ekran()
-{
-	int izbor, ret;
-	nacrtaj_korisnicki_ekran();
-	do {
-		printf("Odaberite broj 1, 2 ili 3 i pritisnite Enter: ");
-
-		ret = scanf_s("%d", &izbor);
-		if (ret != 1 || (izbor < 1 || izbor > 3)) {
-			ocisti_ekran();
-			nacrtaj_admin_ekran();
-			printf("Greska: unos mora biti broj 1, 2 ili 3.\n");
-			// ocistimo ulazni bafer tako sto uklanjamo karaktere iz ulaza dok ne dodjemo do \n ili EOF
-			int c;
-			while ((c = getchar()) != '\n' && c != EOF) {}
-		}
-	} while (ret != 1 || (izbor < 1 || izbor > 3));
-	if (izbor == 1)
-	{
-		ocisti_ekran();
-		printf("Dodaj novog kandidata/stranku:");
-	}
-	else if (izbor == 2)
-	{
-		ocisti_ekran();
-		printf("Ukloni kandidata/stranku: ");
-	}
-	else
-	{
-		ocisti_ekran();
-		printf("Pratite rezultate: ");
+		printf("Pratite rezultate: \n\n");
+		citanje_svih_kandidata(3);
+		vrati_se_nazad(user);
 	}
 }
 
@@ -93,11 +64,11 @@ void pocetni_ekran(User* user)
 	if (izbor == 1)
 	{
 		ocisti_ekran();
-		kreiranje_naloga(&user);
+		kreiranje_naloga(user);
 	}
 	else if (izbor == 2)
 	{
 		ocisti_ekran();
-		prijavite_se(&user);
+		prijavite_se(user);
 	}
 }
