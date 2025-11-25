@@ -2,23 +2,11 @@
 
 #include"Include.h"
 
-int izbroj_cifre(int number)
-{
-	int counter = 0;
-	int digit;
-	while (number != 0)
-	{
-		digit = number % 10;
-		number = number / 10;
-		counter++;
-	}
-	return counter;
-}
-
-void ocisti_input_buffer() {
-	int c;
-	while ((c = getchar()) != '\n' && c != EOF) {}
-}
+//void ocisti_input_buffer() 
+//{
+//	int c;
+//	while ((c = getchar()) != '\n' && c != EOF) {}
+//}
 
 bool string_sadrzi_slova_i_specijalne_karaktere(const char* s)
 {
@@ -30,7 +18,8 @@ bool string_sadrzi_slova_i_specijalne_karaktere(const char* s)
 	return false;
 }
 
-bool string_sadrzi_brojeve_i_specijalne_karaktere(const char* s) {
+bool string_sadrzi_brojeve_i_specijalne_karaktere(const char* s) 
+{
 	for (int i = 0; i < strlen(s); i++)
 	{
 		if (!isalpha(s[i]))
@@ -78,7 +67,8 @@ char* citaj_unos()
 	char* line = NULL, * tmp = NULL;
 	size_t size = 0, index = 0;
 	int ch = EOF;
-	while (ch) {
+	while (ch) 
+	{
 		ch = getc(stdin);
 
 		/* Provera za kraj */
@@ -104,10 +94,10 @@ char* citaj_unos()
 	return line;
 }
 
-bool upisi_podatke_u_fajl(User user)
+bool upisi_podatke_u_fajl(Korisnik korisnik)
 {
 	int upisano = 0;
-	if (!korisnik_vec_postoji(user, false))
+	if (!korisnik_vec_postoji(korisnik, false))
 	{
 		FILE* fajl;
 		fajl = fopen("registrovani_korisnici.bin", "ab");
@@ -115,7 +105,7 @@ bool upisi_podatke_u_fajl(User user)
 		{
 			return false;
 		}
-		upisano = fwrite(&user, sizeof(User), 1, fajl);
+		upisano = fwrite(&korisnik, sizeof(Korisnik), 1, fajl);
 		fclose(fajl);
 	}
 	else
@@ -135,7 +125,7 @@ bool upisi_podatke_u_fajl(User user)
 
 void procitaj_podatke_iz_fajla()
 {
-	User user;
+	Korisnik korisnik;
 	FILE* fajl;
 	fajl = fopen("registrovani_korisnici.bin", "rb");
 	if (fajl == NULL)
@@ -143,79 +133,78 @@ void procitaj_podatke_iz_fajla()
 		fprintf(stderr, "Greska prilikom otvaranja fajla!\n");
 		exit(1);
 	}
-	while (fread(&user, sizeof(user), 1, fajl) == 1)
+	while (fread(&korisnik, sizeof(korisnik), 1, fajl) == 1)
 	{
-		printf("JMBG: %s\n", user.jmbg);
-		printf("Ime: %s\n", user.imeKorisnika);
-		printf("Prezime: %s\n", user.prezimeKorisnika);
-		printf("Email: %s\n", user.email);
-		printf("Broj telefona: %s\n", user.brojTelefona);
-		printf("Sifra: %s\n", user.sifra);
-		printf("Glasacki broj: %s\n", user.glasackiBroj);
-		printf("Vas tip korisnika: %s\n", user.tipKorisnika);
+		printf("JMBG: %s\n", korisnik.jmbg);
+		printf("Ime: %s\n", korisnik.imeKorisnika);
+		printf("Prezime: %s\n", korisnik.prezimeKorisnika);
+		printf("Email: %s\n", korisnik.email);
+		printf("Broj telefona: %s\n", korisnik.brojTelefona);
+		printf("Sifra: %s\n", korisnik.sifra);
+		printf("Glasacki broj: %s\n", korisnik.glasackiBroj);
 		printf("\n");
 	}
 	fclose(fajl);
 }
 
-bool korisnik_vec_postoji(User korisnik_koji_se_registruje, bool prijavljivanje)
+bool korisnik_vec_postoji(Korisnik korisnik_koji_se_registruje, bool prijavljivanje)
 {
-	User user;
+	Korisnik korisnik;
 	FILE* fajl;
 	fajl = fopen("registrovani_korisnici.bin", "rb");
 	if (fajl == NULL)
 	{
 		return false;
 	}
-	while (fread(&user, sizeof(user), 1, fajl) == 1)
+	while (fread(&korisnik, sizeof(korisnik), 1, fajl) == 1)
 	{
 		if (prijavljivanje)
 		{
-			if (strcmp(korisnik_koji_se_registruje.jmbg, user.jmbg) == 0 && strcmp(korisnik_koji_se_registruje.imeKorisnika, user.imeKorisnika) == 0
-				&& strcmp(korisnik_koji_se_registruje.prezimeKorisnika, user.prezimeKorisnika) == 0 && strcmp(korisnik_koji_se_registruje.sifra, user.sifra) == 0
-				&& strcmp(korisnik_koji_se_registruje.email, user.email) == 0 && strcmp(korisnik_koji_se_registruje.brojTelefona, user.brojTelefona) == 0 &&
-				strcmp(korisnik_koji_se_registruje.glasackiBroj, user.glasackiBroj) == 0) 
+			if (strcmp(korisnik_koji_se_registruje.jmbg, korisnik.jmbg) == 0 && strcmp(korisnik_koji_se_registruje.imeKorisnika, korisnik.imeKorisnika) == 0
+				&& strcmp(korisnik_koji_se_registruje.prezimeKorisnika, korisnik.prezimeKorisnika) == 0 && strcmp(korisnik_koji_se_registruje.sifra, korisnik.sifra) == 0
+				&& strcmp(korisnik_koji_se_registruje.email, korisnik.email) == 0 && strcmp(korisnik_koji_se_registruje.brojTelefona, korisnik.brojTelefona) == 0 &&
+				strcmp(korisnik_koji_se_registruje.glasackiBroj, korisnik.glasackiBroj) == 0)
 			{
 				fclose(fajl);
 				return true;
 			}
-			else if (strcmp(korisnik_koji_se_registruje.jmbg, user.jmbg) != 0) 
+			else if (strcmp(korisnik_koji_se_registruje.jmbg, korisnik.jmbg) != 0)
 			{
 				fclose(fajl);
 				printf("Uneli ste pogresan jmbg\n");
 				return false;
 			}
-			else if (strcmp(korisnik_koji_se_registruje.imeKorisnika, user.imeKorisnika) != 0)
+			else if (strcmp(korisnik_koji_se_registruje.imeKorisnika, korisnik.imeKorisnika) != 0)
 			{
 				fclose(fajl);
 				printf("Uneli ste pogresano ime\n");
 				return false;
 			}
-			else if (strcmp(korisnik_koji_se_registruje.prezimeKorisnika, user.prezimeKorisnika) != 0)
+			else if (strcmp(korisnik_koji_se_registruje.prezimeKorisnika, korisnik.prezimeKorisnika) != 0)
 			{
 				fclose(fajl);
 				printf("Uneli ste pogresano prezime\n");
 				return false;
 			}
-			else if (strcmp(korisnik_koji_se_registruje.sifra, user.sifra) != 0)
+			else if (strcmp(korisnik_koji_se_registruje.sifra, korisnik.sifra) != 0)
 			{
 				fclose(fajl);
 				printf("Uneli ste pogresnu sifru\n");
 				return false;
 			}
-			else if (strcmp(korisnik_koji_se_registruje.email, user.email) != 0)
+			else if (strcmp(korisnik_koji_se_registruje.email, korisnik.email) != 0)
 			{
 				fclose(fajl);
 				printf("Uneli ste pogresan email\n");
 				return false;
 			}
-			else if (strcmp(korisnik_koji_se_registruje.brojTelefona, user.brojTelefona) != 0)
+			else if (strcmp(korisnik_koji_se_registruje.brojTelefona, korisnik.brojTelefona) != 0)
 			{
 				fclose(fajl);
 				printf("Uneli ste pogresan broj telefona\n");
 				return false;
 			}
-			else if (strcmp(korisnik_koji_se_registruje.glasackiBroj, user.glasackiBroj) != 0)
+			else if (strcmp(korisnik_koji_se_registruje.glasackiBroj, korisnik.glasackiBroj) != 0)
 			{
 				fclose(fajl);
 				printf("Uneli ste pogresan glasacki broj\n");
@@ -224,22 +213,22 @@ bool korisnik_vec_postoji(User korisnik_koji_se_registruje, bool prijavljivanje)
 		}
 		else 
 		{
-			if (strcmp(korisnik_koji_se_registruje.jmbg, user.jmbg) == 0)
+			if (strcmp(korisnik_koji_se_registruje.jmbg, korisnik.jmbg) == 0)
 			{
 				fclose(fajl);
 				return true;
 			}
-			if (strcmp(korisnik_koji_se_registruje.email, user.email) == 0)
+			if (strcmp(korisnik_koji_se_registruje.email, korisnik.email) == 0)
 			{
 				fclose(fajl);
 				return true;
 			}
-			if (strcmp(korisnik_koji_se_registruje.brojTelefona, user.brojTelefona) == 0)
+			if (strcmp(korisnik_koji_se_registruje.brojTelefona, korisnik.brojTelefona) == 0)
 			{
 				fclose(fajl);
 				return true;
 			}
-			if (strcmp(korisnik_koji_se_registruje.glasackiBroj, user.glasackiBroj) == 0)
+			if (strcmp(korisnik_koji_se_registruje.glasackiBroj, korisnik.glasackiBroj) == 0)
 			{
 				fclose(fajl);
 				return true;
@@ -250,21 +239,9 @@ bool korisnik_vec_postoji(User korisnik_koji_se_registruje, bool prijavljivanje)
 	return false;
 }
 
-void unesi_podatke(User* user) 
+void unesi_podatke(Korisnik* korisnik)
 {
-	user->jmbg[0] = '\0';
-	user->imeKorisnika[0] = '\0';
-	user->prezimeKorisnika[0] = '\0';
-	user->sifra[0] = '\0';
-	user->email[0] = '\0';
-	user->brojTelefona[0] = '\0';
-	user->glasackiBroj[0] = '\0';
-	user->tipKorisnika[0] = '\0';
-	
-	user->tipKorisnika[strcspn(user->tipKorisnika, "\r\n")] = '\0';
-	strncpy(user->tipKorisnika, "user", 5);
-	user->tipKorisnika[4] = '\0';
-	user->glasao = false;
+	ocisti_podatke(korisnik);
 	
 	do
 	{
@@ -281,8 +258,8 @@ void unesi_podatke(User* user)
 		}
 		else if (strlen(input) == 13 && !string_sadrzi_slova_i_specijalne_karaktere(input))
 		{
-			strncpy(user->jmbg, input, 13);
-			user->jmbg[13] = '\0';
+			strncpy(korisnik->jmbg, input, 13);
+			korisnik->jmbg[13] = '\0';
 			free(input);
 			input = NULL;
 			break;
@@ -294,20 +271,20 @@ void unesi_podatke(User* user)
 		printf("Unesite vase ime: ");
 		char* input = citaj_unos();
 		input[strcspn(input, "\r\n")] = '\0';
-		if (strlen(input) <= 0 || strlen(input) > 14 || string_sadrzi_brojeve_i_specijalne_karaktere(input))
+		if (strlen(input) <= 0 || strlen(input) > 15 || string_sadrzi_brojeve_i_specijalne_karaktere(input))
 		{
 			ocisti_ekran();
 			printf("Svi podaci su obavezni: \n\n");
-			printf("JMBG: %s\n", user->jmbg);
-			printf("Greska pri unosu, ime mora imati od 1 do 14 karaktera i ne sme sadrzati brojeve i specijalne karaktere\n");
+			printf("JMBG: %s\n", korisnik->jmbg);
+			printf("Greska pri unosu, ime mora imati od 1 do 15 karaktera i ne sme sadrzati brojeve i specijalne karaktere\n");
 			free(input);
 			input = NULL;
 		}
-		else if (strlen(input) > 0 && strlen(input) <= 14 && !string_sadrzi_brojeve_i_specijalne_karaktere(input))
+		else if (strlen(input) > 0 && strlen(input) <= 15 && !string_sadrzi_brojeve_i_specijalne_karaktere(input))
 		{
-			strncpy(user->imeKorisnika, input, strlen(input));
-			user->imeKorisnika[strlen(input)] = '\0';
-			formatiraj_string(user->imeKorisnika);
+			strncpy(korisnik->imeKorisnika, input, strlen(input));
+			korisnik->imeKorisnika[strlen(input)] = '\0';
+			formatiraj_string(korisnik->imeKorisnika);
 			free(input);
 			input = NULL;
 			break;
@@ -320,21 +297,21 @@ void unesi_podatke(User* user)
 		printf("Unesite vase prezime: ");
 		char* input = citaj_unos();
 		input[strcspn(input, "\r\n")] = '\0';
-		if (strlen(input) <= 0 || strlen(input) > 29 || string_sadrzi_brojeve_i_specijalne_karaktere(input))
+		if (strlen(input) <= 0 || strlen(input) > 30 || string_sadrzi_brojeve_i_specijalne_karaktere(input))
 		{
 			ocisti_ekran();
 			printf("Svi podaci su obavezni: \n\n");
-			printf("JMBG: %s\n", user->jmbg);
-			printf("Ime: %s\n", user->imeKorisnika);
-			printf("Greska pri unosu, prezime mora imati od 1 do 29 karaktera i ne sme sadrzati brojeve i specijalne karaktere\n");
+			printf("JMBG: %s\n", korisnik->jmbg);
+			printf("Ime: %s\n", korisnik->imeKorisnika);
+			printf("Greska pri unosu, prezime mora imati od 1 do 30 karaktera i ne sme sadrzati brojeve i specijalne karaktere\n");
 			free(input);
 			input = NULL;
 		}
-		else if (strlen(input) > 0 && strlen(input) <= 29 && !string_sadrzi_brojeve_i_specijalne_karaktere(input))
+		else if (strlen(input) > 0 && strlen(input) <= 30 && !string_sadrzi_brojeve_i_specijalne_karaktere(input))
 		{
-			strncpy(user->prezimeKorisnika, input, strlen(input));
-			user->prezimeKorisnika[strlen(input)] = '\0';
-			formatiraj_string(user->prezimeKorisnika);
+			strncpy(korisnik->prezimeKorisnika, input, strlen(input));
+			korisnik->prezimeKorisnika[strlen(input)] = '\0';
+			formatiraj_string(korisnik->prezimeKorisnika);
 			free(input);
 			input = NULL;
 			break;
@@ -347,23 +324,23 @@ void unesi_podatke(User* user)
 		printf("Unesite vas email: ");
 		char* input = citaj_unos();
 		input[strcspn(input, "\r\n")] = '\0';
-		if (strlen(input) <= 0 || strlen(input) > 49 || !email_je_ispravno_formatiran(input))
+		if (strlen(input) <= 0 || strlen(input) > 50 || !email_je_ispravno_formatiran(input))
 		{
 			ocisti_ekran();
 			printf("Svi podaci su obavezni: \n\n");
-			printf("JMBG: %s\n", user->jmbg);
-			printf("Ime: %s\n", user->imeKorisnika);
-			printf("Prezime: %s\n", user->prezimeKorisnika);
-			printf("Greska pri unosu, email mora imati od 1 do 49 karaktera, i mora biti u formatu primer@gmail.com\n");
+			printf("JMBG: %s\n", korisnik->jmbg);
+			printf("Ime: %s\n", korisnik->imeKorisnika);
+			printf("Prezime: %s\n", korisnik->prezimeKorisnika);
+			printf("Greska pri unosu, email mora imati od 1 do 50 karaktera, i mora biti u formatu primer@gmail.com\n");
 			free(input);
 			input = NULL;
 	
 		}
-		else if (strlen(input) > 0 && strlen(input) <= 49 && email_je_ispravno_formatiran(input))
+		else if (strlen(input) > 0 && strlen(input) <= 50 && email_je_ispravno_formatiran(input))
 		{
-			strncpy(user->email, input, strlen(input));
-			user->email[strlen(input)] = '\0';
-			formatiraj_string(user->email);
+			strncpy(korisnik->email, input, strlen(input));
+			korisnik->email[strlen(input)] = '\0';
+			formatiraj_string(korisnik->email);
 			free(input);
 			input = NULL;
 			break;
@@ -380,18 +357,18 @@ void unesi_podatke(User* user)
 		{
 			ocisti_ekran();
 			printf("Svi podaci su obavezni: \n\n");
-			printf("JMBG: %s\n", user->jmbg);
-			printf("Ime: %s\n", user->imeKorisnika);
-			printf("Prezime: %s\n", user->prezimeKorisnika);
-			printf("Email: %s\n", user->email);
+			printf("JMBG: %s\n", korisnik->jmbg);
+			printf("Ime: %s\n", korisnik->imeKorisnika);
+			printf("Prezime: %s\n", korisnik->prezimeKorisnika);
+			printf("Email: %s\n", korisnik->email);
 			printf("Greska pri unosu, broj telefona mora imati 10 cifara, i ne sme sadrzati slova  i specijalne karaktere\n");
 			free(input);
 			input = NULL;
 		}
 		else if (strlen(input) == 10 && !string_sadrzi_slova_i_specijalne_karaktere(input))
 		{
-			strncpy(user->brojTelefona, input, 10);
-			user->brojTelefona[10] = '\0';
+			strncpy(korisnik->brojTelefona, input, 10);
+			korisnik->brojTelefona[10] = '\0';
 			free(input);
 			input = NULL;
 			break;
@@ -403,23 +380,23 @@ void unesi_podatke(User* user)
 		printf("Unesite sifru: ");
 		char* input = citaj_unos();
 		input[strcspn(input, "\r\n")] = '\0';
-		if (strlen(input) < 10 || strlen(input) > 1023 || !string_sadrzi_slova_i_specijalne_karaktere(input))
+		if (strlen(input) < 10 || strlen(input) > 1024 || !string_sadrzi_slova_i_specijalne_karaktere(input))
 		{
 			ocisti_ekran();
 			printf("Svi podaci su obavezni: \n\n");
-			printf("JMBG: %s\n", user->jmbg);
-			printf("Ime: %s\n", user->imeKorisnika);
-			printf("Prezime: %s\n", user->prezimeKorisnika);
-			printf("Email: %s\n", user->email);
-			printf("Broj telefona: %s\n", user->brojTelefona);
+			printf("JMBG: %s\n", korisnik->jmbg);
+			printf("Ime: %s\n", korisnik->imeKorisnika);
+			printf("Prezime: %s\n", korisnik->prezimeKorisnika);
+			printf("Email: %s\n", korisnik->email);
+			printf("Broj telefona: %s\n", korisnik->brojTelefona);
 			printf("Greska pri unosu, sifra mora imati minimum duzinu 10, a maksimum 1023, i mora sadrzati bar jedno slovo sadrzati ili specijalni karakter\n");
 			free(input);
 			input = NULL;
 		}
-		else if (strlen(input) >= 10 && strlen(input) <= 1023 && string_sadrzi_slova_i_specijalne_karaktere(input))
+		else if (strlen(input) >= 10 && strlen(input) <= 1024 && string_sadrzi_slova_i_specijalne_karaktere(input))
 		{
-			strncpy(user->sifra, input, strlen(input));
-			user->sifra[strlen(input)] = '\0';
+			strncpy(korisnik->sifra, input, strlen(input));
+			korisnik->sifra[strlen(input)] = '\0';
 			free(input);
 			input = NULL;
 			break;
@@ -435,19 +412,19 @@ void unesi_podatke(User* user)
 		{
 			ocisti_ekran();
 			printf("Svi podaci su obavezni: \n\n");
-			printf("JMBG: %s\n", user->jmbg);
-			printf("Ime: %s\n", user->imeKorisnika);
-			printf("Prezime: %s\n", user->prezimeKorisnika);
-			printf("Email: %s\n", user->email);
-			printf("Broj telefona: %s\n", user->brojTelefona);
+			printf("JMBG: %s\n", korisnik->jmbg);
+			printf("Ime: %s\n", korisnik->imeKorisnika);
+			printf("Prezime: %s\n", korisnik->prezimeKorisnika);
+			printf("Email: %s\n", korisnik->email);
+			printf("Broj telefona: %s\n", korisnik->brojTelefona);
 			printf("Greska pri unosu, glasacki broj mora imati duzinu 6 i nesme da sadrzi slova i specijalne karaktere\n");
 			free(input);
 			input = NULL;
 		}
 		else if (strlen(input) == 6 && !string_sadrzi_slova_i_specijalne_karaktere(input))
 		{
-			strncpy(user->glasackiBroj, input, 6);
-			user->glasackiBroj[6] = '\0';
+			strncpy(korisnik->glasackiBroj, input, 6);
+			korisnik->glasackiBroj[6] = '\0';
 			free(input);
 			input = NULL;
 			break;
@@ -455,16 +432,16 @@ void unesi_podatke(User* user)
 	} while (1);
 }
 
-void ocisti_podatke(User* user) 
+void ocisti_podatke(Korisnik* korisnik)
 {
-	user->jmbg[0] = '\0';
-	user->imeKorisnika[0] = '\0';
-	user->prezimeKorisnika[0] = '\0';
-	user->sifra[0] = '\0';
-	user->email[0] = '\0';
-	user->brojTelefona[0] = '\0';
-	user->glasackiBroj[0] = '\0';
-	user->tipKorisnika[0] = '\0';
+	korisnik->jmbg[0] = '\0';
+	korisnik->imeKorisnika[0] = '\0';
+	korisnik->prezimeKorisnika[0] = '\0';
+	korisnik->sifra[0] = '\0';
+	korisnik->email[0] = '\0';
+	korisnik->brojTelefona[0] = '\0';
+	korisnik->glasackiBroj[0] = '\0';
+	korisnik->glasao = false;
 }
 
 SOCKET kreiraj_soket()
@@ -472,11 +449,12 @@ SOCKET kreiraj_soket()
 	WSADATA wsaData;
 	SOCKET ServerSocket = INVALID_SOCKET;
 	struct addrinfo* result = NULL, hints;
-	const char* imeServera = "127.0.0.1";   // ili IP/adresa tvog servera
+	const char* imeServera = "127.0.0.1";   // ili IP/adresa servera
 	const char* portServera = "27017";       // ili port na kojem server slusa
 
 	// 1) Inicijalizacija Winsock-a
-	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) 
+	{
 		fprintf(stderr, "WSAStartup neuspesan\n");
 		return INVALID_SOCKET;
 	}
@@ -487,7 +465,8 @@ SOCKET kreiraj_soket()
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 
-	if (getaddrinfo(imeServera, portServera, &hints, &result) != 0) {
+	if (getaddrinfo(imeServera, portServera, &hints, &result) != 0) 
+	{
 		fprintf(stderr, "getaddrinfo neuspesan\n");
 		WSACleanup();
 		return INVALID_SOCKET;
@@ -495,7 +474,8 @@ SOCKET kreiraj_soket()
 
 	// 3) Kreiranje socket-a
 	ServerSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-	if (ServerSocket == INVALID_SOCKET) {
+	if (ServerSocket == INVALID_SOCKET) 
+	{
 		fprintf(stderr, "socket neuspesan: %d\n", WSAGetLastError());
 		freeaddrinfo(result);
 		WSACleanup();
@@ -503,7 +483,8 @@ SOCKET kreiraj_soket()
 	}
 
 	// 4) Povezivanje na server
-	if (connect(ServerSocket, result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR) {
+	if (connect(ServerSocket, result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR) 
+	{
 		fprintf(stderr, "connect neuspesan: %d\n", WSAGetLastError());
 		closesocket(ServerSocket);
 		freeaddrinfo(result);
@@ -537,10 +518,14 @@ void citanje_svih_kandidata(int izbor)
 			else if (iResult == 0)
 			{
 				// server je pozvao shutdown(SD_SEND) ili zatvorio socket
+				closesocket(ServerSocket);
+				WSACleanup();
 				return;
 			}
 			else
 			{
+				closesocket(ServerSocket);
+				WSACleanup();
 				printf("recv neuspesan, greska: %d\n", WSAGetLastError());
 				return;
 			}
@@ -565,12 +550,12 @@ void citanje_svih_kandidata(int izbor)
 		}
 		printf("\n");
 	}
-	// 6) Zatvori konekciju i ocisti Winsock
+	// 6) Zatvaram konekciju i cistim Winsock
 	closesocket(ServerSocket);
 	WSACleanup();
 }
 
-void vrati_se_nazad(User* user) 
+void vrati_se_nazad(Korisnik* korisnik)
 {
 	int vrati_se_nazad = 0, ret = 0;
 	do
@@ -582,7 +567,6 @@ void vrati_se_nazad(User* user)
 			ocisti_ekran();
 			citanje_svih_kandidata(1);
 			printf("Greska: unos mora biti broj 0\n");
-			// ocistimo ulazni bafer tako sto uklanjamo karaktere iz ulaza dok ne dodjemo do \n ili EOF
 			int c;
 			while ((c = getchar()) != '\n' && c != EOF) {}
 		}
@@ -590,7 +574,7 @@ void vrati_se_nazad(User* user)
 	if (vrati_se_nazad == 0)
 	{
 		ocisti_ekran();
-		korisnicki_ekran(user);
+		korisnicki_ekran(korisnik);
 		return;
 	}
 }

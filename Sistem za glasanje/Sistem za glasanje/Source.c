@@ -2,7 +2,7 @@
 
 int main()
 {
-	User user;
-	pocetni_ekran(&user);
+	Korisnik korisnik;
+	pocetni_ekran(&korisnik);
 	return 0;
 }

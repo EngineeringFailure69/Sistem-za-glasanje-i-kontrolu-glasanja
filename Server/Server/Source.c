@@ -13,22 +13,22 @@
 // Potrebno je linkovati Ws2_32.lib
 #pragma comment(lib, "Ws2_32.lib")
 
-// Definicija strukture User – ista na klijentu i serveru
+// Definicija strukture User ï¿½ ista na klijentu i serveru
 typedef struct
 {
     char jmbg[14];
-    char imeKorisnika[15];
-    char prezimeKorisnika[30];
+    char imeKorisnika[16];
+    char prezimeKorisnika[31];
     char brojTelefona[11];
     char glasackiBroj[7];
 } User;
 
 typedef struct 
 {
-    char punNazivStranke[100];
-    char skracenica[6];
-    char imeLidera[30];
-    char prezimeLidera[30];
+    char punNazivStranke[101];
+    char skracenica[7];
+    char imeLidera[16];
+    char prezimeLidera[31];
     int redniBroj;
     int brojGlasova;
 }Kandidat;
@@ -118,7 +118,7 @@ void obradi_usera(SOCKET ClientSocket)
         bool postoji = birac_postoji(primljeni);
         printf("Provera korisnika: %s\n", postoji ? "POSTOJI" : "NE POSTOJI");
 
-        // 10. odgovor – jedan bajt
+        // 10. odgovor ï¿½ jedan bajt
         char resp = postoji ? 1 : 0;
 
         // 11. Slanje jednog bajta
@@ -210,7 +210,7 @@ void obradi_admina(SOCKET ClientSocket)
         bool upisan = upisi_podatke_u_fajl(primljeni);
         printf("Provera korisnika: %s\n", upisan ? "UPISAN" : "NIJE UPISAN");
 
-        // 10. odgovor – jedan bajt
+        // 10. odgovor ï¿½ jedan bajt
         char resp = upisan ? 1 : 0;
 
         // 11. Slanje jednog bajta
@@ -388,7 +388,7 @@ int __cdecl main(void)
                 printf("Prihvacena konekcija na portu %s (admin aplikacija)\n", portovi[1]);
                 //Ovde pozovite funkciju za obradu druge aplikacije,
                 obradi_admina(ClientSocket);
-                closesocket(ClientSocket);  // za sada samo zatvaramo
+                closesocket(ClientSocket);  // za sada samo zatvaramo, moze da se obrise
             }
         }
         // nova konekcija na trecem portu

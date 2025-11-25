@@ -20,10 +20,10 @@
 
 typedef struct
 {
-	char punNazivStranke[100];
-	char skracenica[6];
-	char imeLidera[30];
-	char prezimeLidera[30];
+	char punNazivStranke[101];
+	char skracenica[7];
+	char imeLidera[16];
+	char prezimeLidera[31];
 	int redniBroj;
 	int brojGlasova;
 }Kandidat;
@@ -58,7 +58,6 @@ char* citaj_unos()
 	while (ch) {
 		ch = getc(stdin);
 
-		/* Provera za kraj */
 		if (ch == EOF || ch == '\n')
 			ch = 0;
 		if (ch == 27) 
@@ -69,7 +68,6 @@ char* citaj_unos()
 			return line;
 		}
 
-		/* Provera da li treba da se prosiri rezervisan prostor */
 		if (size <= index) {
 			size += sizeof(ch);
 			tmp = realloc(line, size);
@@ -81,7 +79,6 @@ char* citaj_unos()
 			line = tmp;
 		}
 
-		/* Upisi karakter */
 		line[index++] = ch;
 	}
 
@@ -135,17 +132,16 @@ bool posalji_podatke_za_upis(const Kandidat* kandidat) {
 		total += iResult;
 	}
 
-	// Signalizacija serveru da je slanje zavrseno (opciono)
+	// Signalizacija serveru da je slanje zavrseno
 	iResult = shutdown(ConnectSocket, SD_SEND);
 	if (iResult == SOCKET_ERROR) {
 		printf("shutdown neuspesan sa greskom: %d\n", WSAGetLastError());
-		// Mozemo nastaviti da primamo odgovor i pamtimo da je greske, ali ovde ignorisemo
 	}
 
-	// Cekamo i primamo odgovor: 1 bajt
+	// Cekam i primam odgovor: 1 bajt
 	char resp = 0;
 	total = 0;
-	expected = 1; // zelimo 1 bajt
+	expected = 1; // ocekujem 1 bajt
 	char* resp_ptr = &resp;
 	while (total < expected) {
 		iResult = recv(ConnectSocket, resp_ptr + total, expected - total, 0);
@@ -153,7 +149,7 @@ bool posalji_podatke_za_upis(const Kandidat* kandidat) {
 			total += iResult;
 		}
 		else if (iResult == 0) {
-			printf("Konekcija zatvorena od strane servera pre nego što je poslao odgovor\n");
+			printf("Konekcija zatvorena od strane servera pre nego sto je poslao odgovor\n");
 			break;
 		}
 		else {
@@ -169,7 +165,6 @@ bool posalji_podatke_za_upis(const Kandidat* kandidat) {
 		return resp == 1;
 	}
 	else {
-		// Nismo dobili ceo bajt odgovora
 		return false;
 	}
 }
@@ -207,15 +202,15 @@ void unesi_podatke(Kandidat* kandidat)
 		printf("Unesite ime stranke: ");
 		char* input = citaj_unos();
 		input[strcspn(input, "\r\n")] = '\0';
-		if (strlen(input) <= 0 || strlen(input) > 99 || string_sadrzi_brojeve_i_specijalne_karaktere(input, false))
+		if (strlen(input) <= 0 || strlen(input) > 100 || string_sadrzi_brojeve_i_specijalne_karaktere(input, false))
 		{
 			ocisti_ekran();
 			printf("Svi podaci su obavezni: \n\n");
-			printf("Greska pri unosu, ime mora imati od 1 do 99 karaktera i ne sme sadrzati brojeve i specijalne karaktere\n");
+			printf("Greska pri unosu, ime mora imati od 1 do 100 karaktera i ne sme sadrzati brojeve i specijalne karaktere\n");
 			free(input);
 			input = NULL;
 		}
-		else if (strlen(input) > 0 && strlen(input) <= 99 && !string_sadrzi_brojeve_i_specijalne_karaktere(input, false))
+		else if (strlen(input) > 0 && strlen(input) <= 100 && !string_sadrzi_brojeve_i_specijalne_karaktere(input, false))
 		{
 			strncpy(kandidat->punNazivStranke, input, strlen(input));
 			kandidat->punNazivStranke[strlen(input)] = '\0';
@@ -232,16 +227,16 @@ void unesi_podatke(Kandidat* kandidat)
 		printf("Unesite skracenicu stranke: ");
 		char* input = citaj_unos();
 		input[strcspn(input, "\r\n")] = '\0';
-		if (strlen(input) <= 0 || strlen(input) > 5 || string_sadrzi_brojeve_i_specijalne_karaktere(input, false))
+		if (strlen(input) <= 0 || strlen(input) > 6 || string_sadrzi_brojeve_i_specijalne_karaktere(input, false))
 		{
 			ocisti_ekran();
 			printf("Svi podaci su obavezni: \n\n");
 			printf("Naziv stranke: %s", kandidat->punNazivStranke);
-			printf("Greska pri unosu, ime mora imati od 1 do 5 karaktera i ne sme sadrzati brojeve i specijalne karaktere\n");
+			printf("\nGreska pri unosu, ime mora imati od 1 do 6 karaktera i ne sme sadrzati brojeve i specijalne karaktere\n");
 			free(input);
 			input = NULL;
 		}
-		else if (strlen(input) > 0 && strlen(input) <= 5 && !string_sadrzi_brojeve_i_specijalne_karaktere(input, false))
+		else if (strlen(input) > 0 && strlen(input) <= 6 && !string_sadrzi_brojeve_i_specijalne_karaktere(input, false))
 		{
 			strncpy(kandidat->skracenica, input, strlen(input));
 			kandidat->skracenica[strlen(input)] = '\0';
@@ -258,17 +253,17 @@ void unesi_podatke(Kandidat* kandidat)
 		printf("Unesite ime lidera stranke: ");
 		char* input = citaj_unos();
 		input[strcspn(input, "\r\n")] = '\0';
-		if (strlen(input) <= 0 || strlen(input) > 29 || string_sadrzi_brojeve_i_specijalne_karaktere(input, true))
+		if (strlen(input) <= 0 || strlen(input) > 15 || string_sadrzi_brojeve_i_specijalne_karaktere(input, true))
 		{
 			ocisti_ekran();
 			printf("Svi podaci su obavezni: \n\n");
 			printf("Naziv stranke: %s\n", kandidat->punNazivStranke);
 			printf("Skracenica: %s\n", kandidat->skracenica);
-			printf("Greska pri unosu, ime mora imati od 1 do 29 karaktera i ne sme sadrzati brojeve i specijalne karaktere\n");
+			printf("\nGreska pri unosu, ime mora imati od 1 do 15 karaktera i ne sme sadrzati brojeve i specijalne karaktere\n");
 			free(input);
 			input = NULL;
 		}
-		else if (strlen(input) > 0 && strlen(input) <= 29 && !string_sadrzi_brojeve_i_specijalne_karaktere(input, true))
+		else if (strlen(input) > 0 && strlen(input) <= 15 && !string_sadrzi_brojeve_i_specijalne_karaktere(input, true))
 		{
 			strncpy(kandidat->imeLidera, input, strlen(input));
 			kandidat->imeLidera[strlen(input)] = '\0';
@@ -285,18 +280,18 @@ void unesi_podatke(Kandidat* kandidat)
 		printf("Unesite prezime lidera stranke: ");
 		char* input = citaj_unos();
 		input[strcspn(input, "\r\n")] = '\0';
-		if (strlen(input) <= 0 || strlen(input) > 29 || string_sadrzi_brojeve_i_specijalne_karaktere(input, true))
+		if (strlen(input) <= 0 || strlen(input) > 30 || string_sadrzi_brojeve_i_specijalne_karaktere(input, true))
 		{
 			ocisti_ekran();
 			printf("Svi podaci su obavezni: \n\n");
 			printf("Naziv stranke:  %s\n", kandidat->punNazivStranke);
 			printf("Skracenica: %s\n", kandidat->skracenica);
 			printf("Ime: %s\n", kandidat->imeLidera);
-			printf("Greska pri unosu, prezime mora imati od 1 do 29 karaktera i ne sme sadrzati brojeve i specijalne karaktere\n");
+			printf("\nGreska pri unosu, prezime mora imati od 1 do 30 karaktera i ne sme sadrzati brojeve i specijalne karaktere\n");
 			free(input);
 			input = NULL;
 		}
-		else if (strlen(input) > 0 && strlen(input) <= 29 && !string_sadrzi_brojeve_i_specijalne_karaktere(input, true))
+		else if (strlen(input) > 0 && strlen(input) <= 30 && !string_sadrzi_brojeve_i_specijalne_karaktere(input, true))
 		{
 			strncpy(kandidat->prezimeLidera, input, strlen(input));
 			kandidat->prezimeLidera[strlen(input)] = '\0';
@@ -320,8 +315,7 @@ void unesi_podatke(Kandidat* kandidat)
 			printf("Skracenica: %s\n", kandidat->skracenica);
 			printf("Ime: %s\n", kandidat->imeLidera);
 			printf("Prezime: %s\n", kandidat->prezimeLidera);
-			printf("Greska: unos mora biti broj.\n");
-			// ocistimo ulazni bafer tako sto uklanjamo karaktere iz ulaza dok ne dodjemo do \n ili EOF
+			printf("\nGreska: unos mora biti broj.\n");
 			int c;
 			while ((c = getchar()) != '\n' && c != EOF) {}
 		}
@@ -391,7 +385,6 @@ void pocetni_ekran(Kandidat* kandidat)
 			ocisti_ekran();
 			nacrtaj_pocetni_ekran();
 			printf("Greska: unos mora biti broj 1 ili 2\n");
-			// ocistimo ulazni bafer tako sto uklanjamo karaktere iz ulaza dok ne dodjemo do \n ili EOF
 			int c;
 			while ((c = getchar()) != '\n' && c != EOF) {}
 		}
@@ -425,7 +418,7 @@ SOCKET kreiraj_soket(const char* port)
 	WSADATA wsaData;
 	SOCKET ServerSocket = INVALID_SOCKET;
 	struct addrinfo* result = NULL, hints;
-	const char* imeServera = "127.0.0.1";   // ili IP/adresa tvog servera
+	const char* imeServera = "127.0.0.1";   // ili IP/adresa servera
 	const char* portServera = port;       // ili port na kojem server slusa
 
 	// 1) Inicijalizacija Winsock-a
@@ -489,11 +482,14 @@ void citanje_svih_kandidata()
 			}
 			else if (iResult == 0)
 			{
-				// server je pozvao shutdown(SD_SEND) ili zatvorio socket
+				closesocket(ServerSocket);
+				WSACleanup();
 				return;
 			}
 			else
 			{
+				closesocket(ServerSocket);
+				WSACleanup();
 				printf("recv neuspesan, greska: %d\n", WSAGetLastError());
 				return;
 			}
@@ -528,7 +524,6 @@ void vrati_se_nazad(Kandidat* kandidat)
 			ocisti_ekran();
 			citanje_svih_kandidata();
 			printf("Greska: unos mora biti broj 0\n");
-			// ocistimo ulazni bafer tako sto uklanjamo karaktere iz ulaza dok ne dodjemo do \n ili EOF
 			int c;
 			while ((c = getchar()) != '\n' && c != EOF) {}
 		}

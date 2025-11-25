@@ -8,15 +8,15 @@
 typedef struct
 {
     char jmbg[14];
-    char imeKorisnika[15];
-    char prezimeKorisnika[30];
+    char imeKorisnika[16];
+    char prezimeKorisnika[31];
     char brojTelefona[11];
     char glasackiBroj[7];
-}User;
+}Korisnik;
 
-bool upisi_podatke_u_fajl(User user);
+bool upisi_podatke_u_fajl(Korisnik korisnik);
 void procitaj_podatke_iz_fajla(); //Vise je kao test funkcija
-bool korisnik_vec_postoji(User korisnik_koji_se_registruje);
+bool korisnik_vec_postoji(Korisnik korisnik_koji_se_registruje);
 
 void generisi_rand_13_cifara(char jmbg_str[14]) {
     for (int i = 0; i < 13; i++) 
@@ -38,7 +38,7 @@ void generisi_glasacki_broj(char glasacki_broj[7])
     glasacki_broj[6] = '\0';
 }
 
-void izaberi_imena(char ime[15]) 
+void izaberi_imena(char ime[16]) 
 {
     const char* imena[] = {
         "Aleksandar", "Luka", "Nikola", "Stefan", "Marko", "Jovan", "Nemanja", "Milos", "Petar", "Filip",
@@ -92,11 +92,11 @@ void izaberi_imena(char ime[15])
 
     int count = 465;
 
-    int idx = rand() % count;
-    strcpy(ime, imena[idx]);
+    int i = rand() % count;
+    strcpy(ime, imena[i]);
 }
 
-void izaberi_prezimena(char prezime[30]) 
+void izaberi_prezimena(char prezime[31]) 
 {
     const char* prezimena[] = {
         "Jovanovic", "Petrovic", "Nikolic", "Ilic", "Djordjevic", "Pavlovic", "Markovic", "Popovic", "Stojanovic", "Zivkovic",
@@ -161,14 +161,14 @@ void izaberi_prezimena(char prezime[30])
 
     int count = 566;
 
-    int idx = rand() % count;
-    strcpy(prezime, prezimena[idx]);
+    int i = rand() % count;
+    strcpy(prezime, prezimena[i]);
 }
 
-bool upisi_podatke_u_fajl(User user)
+bool upisi_podatke_u_fajl(Korisnik korisnik)
 {
     int upisano = 0;
-    if (!korisnik_vec_postoji(user))
+    if (!korisnik_vec_postoji(korisnik))
     {
         FILE* fajl;
         fajl = fopen("registrovani_biraci.bin", "ab");
@@ -177,7 +177,7 @@ bool upisi_podatke_u_fajl(User user)
             fprintf(stderr, "Greska prilikom otvaranja fajla!\n");
             exit(1);
         }
-        upisano = fwrite(&user, sizeof(User), 1, fajl);
+        upisano = fwrite(&korisnik, sizeof(Korisnik), 1, fajl);
         fclose(fajl);
     }
     else
@@ -197,7 +197,7 @@ bool upisi_podatke_u_fajl(User user)
 
 void procitaj_podatke_iz_fajla()
 {
-    User user;
+    Korisnik korisnik;
     FILE* fajl;
     fajl = fopen("registrovani_biraci.bin", "rb");
     int counter = 0;
@@ -206,7 +206,7 @@ void procitaj_podatke_iz_fajla()
         fprintf(stderr, "Greska prilikom otvaranja fajla!\n");
         exit(1);
     }
-    while (fread(&user, sizeof(user), 1, fajl) == 1)
+    while (fread(&korisnik, sizeof(korisnik), 1, fajl) == 1)
     {
         counter++;
     }
@@ -214,9 +214,9 @@ void procitaj_podatke_iz_fajla()
     fclose(fajl);
 }
 
-bool korisnik_vec_postoji(User korisnik_koji_se_registruje)
+bool korisnik_vec_postoji(Korisnik korisnik_koji_se_registruje)
 {
-    User user;
+    Korisnik korisnik;
     FILE* fajl;
     fajl = fopen("postojeci_korisnici.bin", "rb");
     if (fajl == NULL)
@@ -225,19 +225,19 @@ bool korisnik_vec_postoji(User korisnik_koji_se_registruje)
         //exit(1);
         return false;
     }
-    while (fread(&user, sizeof(user), 1, fajl) == 1)
+    while (fread(&korisnik, sizeof(korisnik), 1, fajl) == 1)
     {
-        if (strcmp(korisnik_koji_se_registruje.jmbg, user.jmbg) == 0)
+        if (strcmp(korisnik_koji_se_registruje.jmbg, korisnik.jmbg) == 0)
         {
             fclose(fajl);
             return true;
         }
-        if (strcmp(korisnik_koji_se_registruje.brojTelefona, user.brojTelefona) == 0)
+        if (strcmp(korisnik_koji_se_registruje.brojTelefona, korisnik.brojTelefona) == 0)
         {
             fclose(fajl);
             return true;
         }
-        if (strcmp(korisnik_koji_se_registruje.glasackiBroj, user.glasackiBroj) == 0) 
+        if (strcmp(korisnik_koji_se_registruje.glasackiBroj, korisnik.glasackiBroj) == 0)
         {
             fclose(fajl);
             return true;
@@ -248,20 +248,19 @@ bool korisnik_vec_postoji(User korisnik_koji_se_registruje)
 }
 
 int main(void) {
-    User user;
-    // Inicijalizuj generator slucajnih brojeva jednom
+    Korisnik korisnik;
     srand((unsigned)time(NULL));
     int counter = 0;
     bool upisano = false;
     while (counter < 100000) 
     {
-        char jmbg[14], ime[15], prezime[30], brt_tel[11], glasacki_br[7];
-        generisi_rand_13_cifara(user.jmbg);
-        izaberi_imena(user.imeKorisnika);
-        izaberi_prezimena(user.prezimeKorisnika);
-        generisi_broj_telefona(user.brojTelefona);
-        generisi_glasacki_broj(user.glasackiBroj);
-        upisano = upisi_podatke_u_fajl(user);
+        char jmbg[14], ime[16], prezime[31], brt_tel[11], glasacki_br[7];
+        generisi_rand_13_cifara(korisnik.jmbg);
+        izaberi_imena(korisnik.imeKorisnika);
+        izaberi_prezimena(korisnik.prezimeKorisnika);
+        generisi_broj_telefona(korisnik.brojTelefona);
+        generisi_glasacki_broj(korisnik.glasackiBroj);
+        upisano = upisi_podatke_u_fajl(korisnik);
         if (upisano)
             counter++;
         else

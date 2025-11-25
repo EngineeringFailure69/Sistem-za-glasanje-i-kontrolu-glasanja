@@ -1,4 +1,4 @@
 #pragma once
 
-void korisnicki_ekran(User* user);
-void pocetni_ekran(User* user);
+void korisnicki_ekran(Korisnik* korisnik);
+void pocetni_ekran(Korisnik* korisnik);
