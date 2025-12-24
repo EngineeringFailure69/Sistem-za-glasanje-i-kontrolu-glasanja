@@ -2,12 +2,6 @@
 
 #include"Include.h"
 
-//void ocisti_input_buffer() 
-//{
-//	int c;
-//	while ((c = getchar()) != '\n' && c != EOF) {}
-//}
-
 bool string_sadrzi_slova_i_specijalne_karaktere(const char* s)
 {
 	for (int i = 0; s[i] != '\0'; i++)
@@ -92,35 +86,6 @@ char* citaj_unos()
 	}
 
 	return line;
-}
-
-bool upisi_podatke_u_fajl(Korisnik korisnik)
-{
-	int upisano = 0;
-	if (!korisnik_vec_postoji(korisnik, false))
-	{
-		FILE* fajl;
-		fajl = fopen("registrovani_korisnici.bin", "ab");
-		if (fajl == NULL)
-		{
-			return false;
-		}
-		upisano = fwrite(&korisnik, sizeof(Korisnik), 1, fajl);
-		fclose(fajl);
-	}
-	else
-		printf("Korisnik vec postoji u bazi, ne mozete da se registrujete dva puta kao isti korisnik!\n\n");
-
-	if (upisano == 1)
-	{
-		printf("Uspesna registracija, podaci zabelezeni!\n");
-		return true;
-	}
-	else
-	{
-		printf("Greska prilikom registracije i upisa podataka!\n");
-		return false;
-	}
 }
 
 void procitaj_podatke_iz_fajla()

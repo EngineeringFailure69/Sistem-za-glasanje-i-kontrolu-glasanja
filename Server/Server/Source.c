@@ -13,15 +13,26 @@
 // Potrebno je linkovati Ws2_32.lib
 #pragma comment(lib, "Ws2_32.lib")
 
-// Definicija strukture User � ista na klijentu i serveru
+// Definicija strukture User ista na klijentu i serveru
 typedef struct
+{
+    char jmbg[14];
+    char imeKorisnika[16];
+    char prezimeKorisnika[31];
+    char sifra[1025];
+    char email[51];
+    char brojTelefona[11];
+    char glasackiBroj[7];
+} Korisnik;
+
+typedef struct 
 {
     char jmbg[14];
     char imeKorisnika[16];
     char prezimeKorisnika[31];
     char brojTelefona[11];
     char glasackiBroj[7];
-} User;
+} Korisnik2;
 
 typedef struct 
 {
@@ -33,9 +44,11 @@ typedef struct
     int brojGlasova;
 }Kandidat;
 
-bool birac_postoji(User korisnik_koji_se_registruje)
+#pragma region Obradjivanje_biraca_klijent_dela
+
+bool birac_postoji(Korisnik korisnik_koji_se_registruje)
 {
-    User user;
+    Korisnik2 user;
     FILE* fajl;
     bool ima = false;
     fajl = fopen("registrovani_biraci.bin", "rb");
@@ -46,7 +59,8 @@ bool birac_postoji(User korisnik_koji_se_registruje)
     while (fread(&user, sizeof(user), 1, fajl) == 1)
     {
         if (strcmp(korisnik_koji_se_registruje.jmbg, user.jmbg) == 0 && strcmp(korisnik_koji_se_registruje.brojTelefona, user.brojTelefona) == 0
-            && strcmp(korisnik_koji_se_registruje.glasackiBroj, user.glasackiBroj) == 0)
+            && strcmp(korisnik_koji_se_registruje.glasackiBroj, user.glasackiBroj) == 0 && strcmp(korisnik_koji_se_registruje.imeKorisnika, user.imeKorisnika) == 0
+            && strcmp(korisnik_koji_se_registruje.prezimeKorisnika, user.prezimeKorisnika) == 0)
         {
             fclose(fajl);
             return true;
@@ -55,6 +69,211 @@ bool birac_postoji(User korisnik_koji_se_registruje)
     fclose(fajl);
     return false;
 }
+
+bool korisnik_vec_postoji_kao_registrovan_nalog(Korisnik korisnik_koji_se_registruje, bool prijavljivanje)
+{
+    Korisnik korisnik;
+    FILE* fajl;
+    fajl = fopen("registrovani_korisnici.bin", "rb");
+    if (fajl == NULL)
+    {
+        return false;
+    }
+    while (fread(&korisnik, sizeof(korisnik), 1, fajl) == 1)
+    {
+#pragma region Login_pogledaj_posle
+
+        if (prijavljivanje)
+        {
+            if (strcmp(korisnik_koji_se_registruje.jmbg, korisnik.jmbg) == 0 && strcmp(korisnik_koji_se_registruje.imeKorisnika, korisnik.imeKorisnika) == 0
+                && strcmp(korisnik_koji_se_registruje.prezimeKorisnika, korisnik.prezimeKorisnika) == 0 && strcmp(korisnik_koji_se_registruje.sifra, korisnik.sifra) == 0
+                && strcmp(korisnik_koji_se_registruje.email, korisnik.email) == 0 && strcmp(korisnik_koji_se_registruje.brojTelefona, korisnik.brojTelefona) == 0 &&
+                strcmp(korisnik_koji_se_registruje.glasackiBroj, korisnik.glasackiBroj) == 0)
+            {
+                fclose(fajl);
+                return true;
+            }
+            else if (strcmp(korisnik_koji_se_registruje.jmbg, korisnik.jmbg) != 0)
+            {
+                fclose(fajl);
+                printf("Uneli ste pogresan jmbg\n");
+                return false;
+            }
+            else if (strcmp(korisnik_koji_se_registruje.imeKorisnika, korisnik.imeKorisnika) != 0)
+            {
+                fclose(fajl);
+                printf("Uneli ste pogresano ime\n");
+                return false;
+            }
+            else if (strcmp(korisnik_koji_se_registruje.prezimeKorisnika, korisnik.prezimeKorisnika) != 0)
+            {
+                fclose(fajl);
+                printf("Uneli ste pogresano prezime\n");
+                return false;
+            }
+            else if (strcmp(korisnik_koji_se_registruje.sifra, korisnik.sifra) != 0)
+            {
+                fclose(fajl);
+                printf("Uneli ste pogresnu sifru\n");
+                return false;
+            }
+            else if (strcmp(korisnik_koji_se_registruje.email, korisnik.email) != 0)
+            {
+                fclose(fajl);
+                printf("Uneli ste pogresan email\n");
+                return false;
+            }
+            else if (strcmp(korisnik_koji_se_registruje.brojTelefona, korisnik.brojTelefona) != 0)
+            {
+                fclose(fajl);
+                printf("Uneli ste pogresan broj telefona\n");
+                return false;
+            }
+            else if (strcmp(korisnik_koji_se_registruje.glasackiBroj, korisnik.glasackiBroj) != 0)
+            {
+                fclose(fajl);
+                printf("Uneli ste pogresan glasacki broj\n");
+                return false;
+            }
+        }
+#pragma endregion
+        else
+        {
+            if (strcmp(korisnik_koji_se_registruje.jmbg, korisnik.jmbg) == 0)
+            {
+                fclose(fajl);
+                return true;
+            }
+            if (strcmp(korisnik_koji_se_registruje.brojTelefona, korisnik.brojTelefona) == 0)
+            {
+                fclose(fajl);
+                return true;
+            }
+            if (strcmp(korisnik_koji_se_registruje.glasackiBroj, korisnik.glasackiBroj) == 0)
+            {
+                fclose(fajl);
+                return true;
+            }
+            if (strcmp(korisnik_koji_se_registruje.email, korisnik.email) == 0)
+            {
+                fclose(fajl);
+                return true;
+            }
+
+        }
+    }
+    fclose(fajl);
+    return false;
+}
+
+bool upisi_podatke_u_fajl_birac(Korisnik korisnik)
+{
+    int upisano = 0;
+    if (!korisnik_vec_postoji_kao_registrovan_nalog(korisnik, false))
+    {
+        FILE* fajl;
+        fajl = fopen("registrovani_korisnici.bin", "ab");
+        if (fajl == NULL)
+        {
+            return false;
+        }
+        upisano = fwrite(&korisnik, sizeof(Korisnik), 1, fajl);
+        fclose(fajl);
+    }
+    else
+        printf("Korisnik vec postoji u bazi, ne mozete da se registrujete dva puta kao isti korisnik!\n");
+
+    if (upisano == 1)
+    {
+        printf("Uspesna registracija, podaci zabelezeni!\n");
+        return true;
+    }
+    else
+    {
+        printf("Greska prilikom registracije i upisa podataka!\n");
+        return false;
+    }
+}
+
+void obradi_usera(SOCKET ClientSocket)
+{
+    //Primanje tacno sizeof(User) bajtova
+    Korisnik primljeni;
+    int total = 0;
+    int expected = sizeof(Korisnik);
+    char* bufptr = (char*)&primljeni;
+    while (total < expected) {
+        int iResult = recv(ClientSocket, bufptr + total, expected - total, 0);
+        if (iResult > 0) {
+            total += iResult;
+        }
+        else if (iResult == 0) {
+            //Klijent je zatvorio vezu prerano
+            printf("Klijent je zatvorio vezu prerano (recv returned 0)\n");
+            break;
+        }
+        else {
+            printf("recv neuspesan sa greskom: %d\n", WSAGetLastError());
+            break;
+        }
+    }
+
+    printf("Server sizeof(User)=%zu\n", sizeof(Korisnik));
+    printf("Server total=%d\n", total);
+
+
+    if (total == expected) {
+        //Null-terminate polja
+        primljeni.jmbg[sizeof primljeni.jmbg - 1] = '\0';
+        primljeni.imeKorisnika[sizeof primljeni.imeKorisnika - 1] = '\0';
+        primljeni.prezimeKorisnika[sizeof primljeni.prezimeKorisnika - 1] = '\0';
+        primljeni.brojTelefona[sizeof primljeni.brojTelefona - 1] = '\0';
+        primljeni.glasackiBroj[sizeof primljeni.glasackiBroj - 1] = '\0';
+        primljeni.sifra[sizeof primljeni.sifra - 1] == '\0';
+        primljeni.email[sizeof primljeni.email - 1] == '\0';
+
+        //Provera iz fajla registrovani_biraci
+        bool postoji = birac_postoji(primljeni);
+        printf("Provera korisnika: %s\n", postoji ? "POSTOJI" : "NE POSTOJI");
+
+        //Odgovor jedan bajt
+        char resp;
+        //Biram koji odgovor saljem
+        if (postoji) //ako birac postoji proveravam da li je vec kreirao nalog
+        {
+            bool uspesna_registracija = upisi_podatke_u_fajl_birac(primljeni);
+            resp = uspesna_registracija ? 1 : 2; // ako je uspesno registrovan nalog, i birac je na spisku, vracam 1, ako je birac vec 
+            //kreirao nalog, pa pokusava opet, onda vracam 2
+        }
+        else //ako birac ne postoji na spisku kao registrovan, jednostavno vracam 0 kao i do sada 
+        {
+            resp = 0;
+        }
+
+        //Slanje jednog bajta
+        int sent = 0;
+        while (sent < 1) {
+            int iResult = send(ClientSocket, (const char*)&resp + sent, 1 - sent, 0);
+            if (iResult == SOCKET_ERROR) {
+                printf("send neuspesan sa greskom: %d\n", WSAGetLastError());
+                break;
+            }
+            sent += iResult;
+        }
+        if (sent == 1) {
+            // Ispis vrednosti koju saljem (0 ili 1 ili 2)
+            printf("Odgovor poslat klijentu: %d\n", (int)resp);
+        }
+    }
+
+    //Zatvoranje konekcije sa tim klijentom
+    closesocket(ClientSocket);
+    printf("Konekcija sa klijentom zatvorena\n");
+}
+
+#pragma endregion
+
+#pragma region Obradjivanje_kandidata_admin_dela
 
 bool kandidat_je_vec_upisan(Kandidat kandidat_koji_se_registruje) 
 {
@@ -77,69 +296,6 @@ bool kandidat_je_vec_upisan(Kandidat kandidat_koji_se_registruje)
     }
     fclose(fajl);
     return false;
-}
-
-void obradi_usera(SOCKET ClientSocket) 
-{
-    // 8. Primanje tacno sizeof(User) bajtova
-    User primljeni;
-    int total = 0;
-    int expected = sizeof(User);
-    char* bufptr = (char*)&primljeni;
-    while (total < expected) {
-        int iResult = recv(ClientSocket, bufptr + total, expected - total, 0);
-        if (iResult > 0) {
-            total += iResult;
-        }
-        else if (iResult == 0) {
-            // Klijent je zatvorio vezu prerano
-            printf("Klijent je zatvorio vezu prerano (recv returned 0)\n");
-            break;
-        }
-        else {
-            printf("recv neuspesan sa greskom: %d\n", WSAGetLastError());
-            break;
-        }
-    }
-
-    printf("Server sizeof(User)=%zu\n", sizeof(User));
-    printf("Server total=%d\n", total);
-
-
-    if (total == expected) {
-        // Null-terminate polja
-        primljeni.jmbg[sizeof primljeni.jmbg - 1] = '\0';
-        primljeni.imeKorisnika[sizeof primljeni.imeKorisnika - 1] = '\0';
-        primljeni.prezimeKorisnika[sizeof primljeni.prezimeKorisnika - 1] = '\0';
-        primljeni.brojTelefona[sizeof primljeni.brojTelefona - 1] = '\0';
-        primljeni.glasackiBroj[sizeof primljeni.glasackiBroj - 1] = '\0';
-
-        // 9.Provera iz fajla
-        bool postoji = birac_postoji(primljeni);
-        printf("Provera korisnika: %s\n", postoji ? "POSTOJI" : "NE POSTOJI");
-
-        // 10. odgovor � jedan bajt
-        char resp = postoji ? 1 : 0;
-
-        // 11. Slanje jednog bajta
-        int sent = 0;
-        while (sent < 1) {
-            int iResult = send(ClientSocket, (const char*)&resp + sent, 1 - sent, 0);
-            if (iResult == SOCKET_ERROR) {
-                printf("send neuspesan sa greskom: %d\n", WSAGetLastError());
-                break;
-            }
-            sent += iResult;
-        }
-        if (sent == 1) {
-            // Ispis vrednosti koju saljem (0 ili 1)
-            printf("Odgovor poslat klijentu: %d\n", (int)resp);
-        }
-    }
-
-    // 12. Zatvoranje konekcije sa tim klijentom
-    closesocket(ClientSocket);
-    printf("Konekcija sa klijentom zatvorena\n");
 }
 
 bool upisi_podatke_u_fajl(Kandidat kandidat)
@@ -173,7 +329,7 @@ bool upisi_podatke_u_fajl(Kandidat kandidat)
 
 void obradi_admina(SOCKET ClientSocket)
 {
-    // 8. Primanje tacno sizeof(Kandidat) bajtova
+    //Primanje tacno sizeof(Kandidat) bajtova
     Kandidat primljeni;
     int total = 0;
     int expected = sizeof(Kandidat);
@@ -184,7 +340,7 @@ void obradi_admina(SOCKET ClientSocket)
             total += iResult;
         }
         else if (iResult == 0) {
-            // Klijent je zatvorio vezu prerano
+            //Klijent je zatvorio vezu prerano
             printf("Klijent je zatvorio vezu prerano (recv returned 0)\n");
             break;
         }
@@ -199,21 +355,21 @@ void obradi_admina(SOCKET ClientSocket)
 
 
     if (total == expected) {
-        // Null-terminate polja
+        //Null-terminate polja
         primljeni.punNazivStranke[sizeof primljeni.punNazivStranke - 1] = '\0';
         primljeni.skracenica[sizeof primljeni.skracenica - 1] = '\0';
         primljeni.imeLidera[sizeof primljeni.imeLidera - 1] = '\0';
         primljeni.prezimeLidera[sizeof primljeni.prezimeLidera - 1] = '\0';
         primljeni.brojGlasova = 0;
 
-        // 9.Provera iz fajla
+        //Provera iz fajla
         bool upisan = upisi_podatke_u_fajl(primljeni);
-        printf("Provera korisnika: %s\n", upisan ? "UPISAN" : "NIJE UPISAN");
+        printf("Provera kandidata: %s\n", upisan ? "UPISAN" : "NIJE UPISAN");
 
-        // 10. odgovor � jedan bajt
+        //Odgovor jedan bajt
         char resp = upisan ? 1 : 0;
 
-        // 11. Slanje jednog bajta
+        //Slanje jednog bajta
         int sent = 0;
         while (sent < 1) {
             int iResult = send(ClientSocket, (const char*)&resp + sent, 1 - sent, 0);
@@ -224,12 +380,12 @@ void obradi_admina(SOCKET ClientSocket)
             sent += iResult;
         }
         if (sent == 1) {
-            // Ispis vrednosti koju saljem (0 ili 1)
+            //Ispis vrednosti koju saljem (0 ili 1)
             printf("Odgovor poslat klijentu: %d\n", (int)resp);
         }
     }
 
-    // 12. Zatvoranje konekcije sa tim klijentom
+    //Zatvoranje konekcije sa tim klijentom
     closesocket(ClientSocket);
     printf("Konekcija sa klijentom zatvorena\n");
 }
@@ -268,6 +424,8 @@ bool salji_sve_kandidate(SOCKET ConnectSocket)
         fprintf(stderr, "shutdown failed: %d\n", WSAGetLastError());
     return true;
 }
+
+#pragma endregion
 
 SOCKET kreiraj_soket(const char* port) 
 {
@@ -331,7 +489,7 @@ SOCKET kreiraj_soket(const char* port)
    
 int __cdecl main(void)
 {
-    /// 1. Inicijalizacija Winsock-a
+    // 1. Inicijalizacija Winsock-a
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) 
     {
@@ -369,44 +527,42 @@ int __cdecl main(void)
             break;
         }
 
-        // nova konekcija na prvom portu
+        //Nova konekcija na prvom portu
         if (FD_ISSET(ListenSocket1, &readSet)) 
         {
             SOCKET ClientSocket = accept(ListenSocket1, NULL, NULL);
             if (ClientSocket != INVALID_SOCKET) 
             {
-                printf("Prihvacena konekcija na portu %s (user aplikacija)\n", portovi[0]);
+                printf("\nPrihvacena konekcija na portu %s (user aplikacija)\n", portovi[0]);
                 obradi_usera(ClientSocket);
             }
         }
-        // nova konekcija na drugom portu
+        //Nova konekcija na drugom portu
         if (FD_ISSET(ListenSocket2, &readSet)) 
         {
             SOCKET ClientSocket = accept(ListenSocket2, NULL, NULL);
             if (ClientSocket != INVALID_SOCKET) 
             {
-                printf("Prihvacena konekcija na portu %s (admin aplikacija)\n", portovi[1]);
-                //Ovde pozovite funkciju za obradu druge aplikacije,
+                printf("\nPrihvacena konekcija na portu %s (admin aplikacija)\n", portovi[1]);
                 obradi_admina(ClientSocket);
-                closesocket(ClientSocket);  // za sada samo zatvaramo, moze da se obrise
+                closesocket(ClientSocket);  //Za sada samo zatvaram, moze da se obrise
             }
         }
-        // nova konekcija na trecem portu
+        //Nova konekcija na trecem portu
         if (FD_ISSET(ListenSocket3, &readSet))
         {
             SOCKET ClientSocket = accept(ListenSocket3, NULL, NULL);
             if (ClientSocket != INVALID_SOCKET)
             {
-                printf("Prihvacena konekcija na portu %s (admin ili user aplikacija)\n", portovi[2]);
-                //Ovde pozovite funkciju za obradu druge aplikacije,
+                printf("\nPrihvacena konekcija na portu %s (admin ili user aplikacija)\n", portovi[2]);
                 if(!salji_sve_kandidate(ClientSocket))
                     fprintf(stderr, "Greska pri slanju kandidata\n");
-                closesocket(ClientSocket);  // za sada samo zatvaramo
+                closesocket(ClientSocket);
             }
         }
     }
 
-    // 13. Cleanup
+    //Cistim sve
     closesocket(ListenSocket1);
     closesocket(ListenSocket2);
     closesocket(ListenSocket3);

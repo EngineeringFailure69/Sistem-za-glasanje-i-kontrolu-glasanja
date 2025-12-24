@@ -20,39 +20,32 @@ void kreiranje_naloga(Korisnik* korisnik)
 		korisnik2.brojTelefona[10] = '\0';
 		strncpy(korisnik2.glasackiBroj, korisnik->glasackiBroj, 6);
 		korisnik2.glasackiBroj[6] = '\0';
+		strncpy(korisnik2.email, korisnik->email, strlen(korisnik->email));
+		korisnik2.email[strlen(korisnik->email)] = '\0';
+		strncpy(korisnik2.sifra, korisnik->sifra, strlen(korisnik->sifra));
+		korisnik2.sifra[strlen(korisnik->sifra)] = '\0';
 		printf("\nProvera podataka, molimo sacekajte...\n\n");
-		bool registrovan_birac = proveri_da_li_je_korisnik_registrovan(&korisnik2);
-		if (registrovan_birac)
+		char registrovan_birac = proveri_da_li_je_korisnik_registrovan(&korisnik2);
+		if ((int)registrovan_birac == 1)
 		{
-			bool uspesna_registracija = upisi_podatke_u_fajl(*korisnik);
-			if (uspesna_registracija)
-			{
-				printf("\nRegistracija uspesna, vasi podaci:\n");
-				printf("JMBG: %s\n", korisnik->jmbg);
-				printf("Ime: %s\n", korisnik->imeKorisnika);
-				printf("Prezime: %s\n", korisnik->prezimeKorisnika);
-				printf("Email: %s\n", korisnik->email);
-				printf("Broj telefona: %s\n", korisnik->brojTelefona);
-				printf("Sifra: %s\n", korisnik->sifra);
-				printf("Vas glasacki broj: %s\n", korisnik->glasackiBroj);
-				printf("\nKreiranje naloga, molimo sacekajte...\n");
-				Sleep(3000); //Simulacija kreiranja naloga, moze da se obrise zbog performansi, cisto je tu zbog izgleda :)
-				printf("Nalog uspesno kreiran, redirektovanje na pocetnu stranicu...\n");
-				Sleep(2000);
-				ocisti_ekran();
-				korisnicki_ekran(korisnik);
-				uspesno_zavrseno = true;
-				return;
-			}
-			else
-			{
-				printf("Birac je vec registrovan, vracamo vas na pocetni ekran\n");
-				Sleep(2000);
-				ocisti_ekran();
-				ocisti_podatke(korisnik);
-				pocetni_ekran(korisnik);
-				return;
-			}
+			printf("\nRegistracija uspesna!\n");
+			printf("\nKreiranje naloga, molimo sacekajte...\n");
+			Sleep(3000); //Simulacija kreiranja naloga, moze da se obrise zbog performansi, cisto je tu zbog izgleda :)
+			printf("Nalog uspesno kreiran, redirektovanje na pocetnu stranicu...\n");
+			Sleep(2000);
+			ocisti_ekran();
+			korisnicki_ekran(korisnik);
+			uspesno_zavrseno = true;
+			return;
+		}
+		else if ((int)registrovan_birac == 2)
+		{
+			printf("Birac je vec registrovan, vracamo vas na pocetni ekran\n");
+			Sleep(2000);
+			ocisti_ekran();
+			ocisti_podatke(korisnik);
+			pocetni_ekran(korisnik);
+			return;
 		}
 		else
 		{
@@ -103,7 +96,7 @@ void prijavite_se(Korisnik* korisnik)
 	}
 }
 
-bool proveri_da_li_je_korisnik_registrovan(const Korisnik2* korisnik) 
+char proveri_da_li_je_korisnik_registrovan(const Korisnik2* korisnik) 
 {
 	WSADATA wsaData;
 	SOCKET ConnectSocket = INVALID_SOCKET;
@@ -115,7 +108,7 @@ bool proveri_da_li_je_korisnik_registrovan(const Korisnik2* korisnik)
 	if (iResult != 0) 
 	{
 		printf("WSAStartup neuspesan sa greskom: %d\n", iResult);
-		return false;
+		return 0;
 	}
 
 	ZeroMemory(&hints, sizeof(hints));
@@ -129,7 +122,7 @@ bool proveri_da_li_je_korisnik_registrovan(const Korisnik2* korisnik)
 	{
 		printf("getaddrinfo neuspesan sa greskom: %d\n", iResult);
 		WSACleanup();
-		return false;
+		return 0;
 	}
 
 	// Pokusaj povezivanja 
@@ -141,7 +134,7 @@ bool proveri_da_li_je_korisnik_registrovan(const Korisnik2* korisnik)
 			printf("socket neuspesan sa greskom: %ld\n", WSAGetLastError());
 			WSACleanup();
 			freeaddrinfo(result);
-			return false;
+			return 0;
 		}
 		iResult = connect(ConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
 		if (iResult == SOCKET_ERROR) 
@@ -158,7 +151,7 @@ bool proveri_da_li_je_korisnik_registrovan(const Korisnik2* korisnik)
 	{
 		printf("Neuspesna konekcija na server!\n");
 		WSACleanup();
-		return false;
+		return 0;
 	}
 
 	// Saljem celu strukturu Korisnik2
@@ -173,11 +166,11 @@ bool proveri_da_li_je_korisnik_registrovan(const Korisnik2* korisnik)
 			printf("send neuspesan sa greskom: %d\n", WSAGetLastError());
 			closesocket(ConnectSocket);
 			WSACleanup();
-			return false;
+			return 0;
 		}
 		total += iResult;
 	}
-	//printf("Poslata User2 struct, ukupno bajtova: %d\n", total);
+	//printf("Poslata Korisnik2 struktura, ukupno bajtova: %d\n", total);
 
 	// Signaliziram serveru da je slanje zavrseno
 	iResult = shutdown(ConnectSocket, SD_SEND);
@@ -215,11 +208,11 @@ bool proveri_da_li_je_korisnik_registrovan(const Korisnik2* korisnik)
 
 	if (total == 1) 
 	{
-		//printf("Primljen odgovor od servera: %d\n", (int)resp);
-		return resp == 1;
+		//printf("Primljen odgovor od servera: %d\n", (int)resp);//0 za gresku, 1 za ispravno, 2 za pokusaj ponovnog registrovanja
+		return resp;
 	}
 	else 
 	{
-		return false;
+		return 0;
 	}
 }

@@ -29,6 +29,8 @@ typedef struct
 	char jmbg[14];
 	char imeKorisnika[16];
 	char prezimeKorisnika[31];
+	char sifra[1025];
+	char email[51];
 	char brojTelefona[11];
 	char glasackiBroj[7];
 }Korisnik2;
