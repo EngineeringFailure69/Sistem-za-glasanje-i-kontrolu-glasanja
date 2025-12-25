@@ -13,7 +13,7 @@
 // Potrebno je linkovati Ws2_32.lib
 #pragma comment(lib, "Ws2_32.lib")
 
-// Definicija strukture User ista na klijentu i serveru
+// Definicija strukture Korisnik ista na klijentu i serveru
 typedef struct
 {
     char jmbg[14];
@@ -23,6 +23,7 @@ typedef struct
     char email[51];
     char brojTelefona[11];
     char glasackiBroj[7];
+    int tipOperacije;
 } Korisnik;
 
 typedef struct 
@@ -43,6 +44,12 @@ typedef struct
     int redniBroj;
     int brojGlasova;
 }Kandidat;
+
+typedef enum 
+{
+    kreiranjeNaloga = 1,
+    prijavljivanjeNaNalog = 2
+}TipOperacije;
 
 #pragma region Obradjivanje_biraca_klijent_dela
 
@@ -81,8 +88,6 @@ bool korisnik_vec_postoji_kao_registrovan_nalog(Korisnik korisnik_koji_se_regist
     }
     while (fread(&korisnik, sizeof(korisnik), 1, fajl) == 1)
     {
-#pragma region Login_pogledaj_posle
-
         if (prijavljivanje)
         {
             if (strcmp(korisnik_koji_se_registruje.jmbg, korisnik.jmbg) == 0 && strcmp(korisnik_koji_se_registruje.imeKorisnika, korisnik.imeKorisnika) == 0
@@ -136,7 +141,6 @@ bool korisnik_vec_postoji_kao_registrovan_nalog(Korisnik korisnik_koji_se_regist
                 return false;
             }
         }
-#pragma endregion
         else
         {
             if (strcmp(korisnik_koji_se_registruje.jmbg, korisnik.jmbg) == 0)
@@ -202,17 +206,21 @@ void obradi_usera(SOCKET ClientSocket)
     int total = 0;
     int expected = sizeof(Korisnik);
     char* bufptr = (char*)&primljeni;
-    while (total < expected) {
+    while (total < expected) 
+    {
         int iResult = recv(ClientSocket, bufptr + total, expected - total, 0);
-        if (iResult > 0) {
+        if (iResult > 0) 
+        {
             total += iResult;
         }
-        else if (iResult == 0) {
+        else if (iResult == 0) 
+        {
             //Klijent je zatvorio vezu prerano
             printf("Klijent je zatvorio vezu prerano (recv returned 0)\n");
             break;
         }
-        else {
+        else 
+        {
             printf("recv neuspesan sa greskom: %d\n", WSAGetLastError());
             break;
         }
@@ -229,38 +237,59 @@ void obradi_usera(SOCKET ClientSocket)
         primljeni.prezimeKorisnika[sizeof primljeni.prezimeKorisnika - 1] = '\0';
         primljeni.brojTelefona[sizeof primljeni.brojTelefona - 1] = '\0';
         primljeni.glasackiBroj[sizeof primljeni.glasackiBroj - 1] = '\0';
-        primljeni.sifra[sizeof primljeni.sifra - 1] == '\0';
-        primljeni.email[sizeof primljeni.email - 1] == '\0';
+        primljeni.sifra[sizeof primljeni.sifra - 1] = '\0';
+        primljeni.email[sizeof primljeni.email - 1] = '\0';
 
-        //Provera iz fajla registrovani_biraci
-        bool postoji = birac_postoji(primljeni);
-        printf("Provera korisnika: %s\n", postoji ? "POSTOJI" : "NE POSTOJI");
-
-        //Odgovor jedan bajt
         char resp;
-        //Biram koji odgovor saljem
-        if (postoji) //ako birac postoji proveravam da li je vec kreirao nalog
+        //bool postoji;
+        //Provera da li radim registrovanje ili login
+        if (primljeni.tipOperacije == kreiranjeNaloga) 
         {
-            bool uspesna_registracija = upisi_podatke_u_fajl_birac(primljeni);
-            resp = uspesna_registracija ? 1 : 2; // ako je uspesno registrovan nalog, i birac je na spisku, vracam 1, ako je birac vec 
-            //kreirao nalog, pa pokusava opet, onda vracam 2
+            printf("Pokrenuta operacija kreiranja naloga za korisnika.\n");
+            //Provera iz fajla registrovani_biraci
+            bool postoji = birac_postoji(primljeni);
+            printf("Provera korisnika: %s\n", postoji ? "POSTOJI" : "NE POSTOJI");
+
+            //Odgovor jedan bajt
+            
+            //Biram koji odgovor saljem
+            if (postoji) //ako birac postoji proveravam da li je vec kreirao nalog
+            {
+                bool uspesna_registracija = upisi_podatke_u_fajl_birac(primljeni);
+                resp = uspesna_registracija ? 1 : 2; // ako je uspesno registrovan nalog, i birac je na spisku, vracam 1, ako je birac vec 
+                //kreirao nalog, pa pokusava opet, onda vracam 2
+            }
+            else //ako birac ne postoji na spisku kao registrovan, jednostavno vracam 0 kao i do sada 
+            {
+                resp = 0;
+            }
         }
-        else //ako birac ne postoji na spisku kao registrovan, jednostavno vracam 0 kao i do sada 
+        else if (primljeni.tipOperacije == prijavljivanjeNaNalog)
         {
-            resp = 0;
+            printf("Pokrenuta operacija prijavljivanja na nalog korisnika.\n");
+            //Provera da li korisnik postoji
+            bool uspesno_logovanje = korisnik_vec_postoji_kao_registrovan_nalog(primljeni, true);
+            resp = uspesno_logovanje ? 3 : 4; //3 ako uspe, 4 ako ne
+        }
+        else 
+        {
+            resp = 5; // nije definisana operacija, ovo cu da prosirim da se salje odgovarajuca poruka posle 
         }
 
         //Slanje jednog bajta
         int sent = 0;
-        while (sent < 1) {
+        while (sent < 1) 
+        {
             int iResult = send(ClientSocket, (const char*)&resp + sent, 1 - sent, 0);
-            if (iResult == SOCKET_ERROR) {
+            if (iResult == SOCKET_ERROR) 
+            {
                 printf("send neuspesan sa greskom: %d\n", WSAGetLastError());
                 break;
             }
             sent += iResult;
         }
-        if (sent == 1) {
+        if (sent == 1) 
+        {
             // Ispis vrednosti koju saljem (0 ili 1 ili 2)
             printf("Odgovor poslat klijentu: %d\n", (int)resp);
         }

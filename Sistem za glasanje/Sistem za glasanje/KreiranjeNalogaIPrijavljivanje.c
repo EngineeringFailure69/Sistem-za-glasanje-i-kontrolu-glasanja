@@ -24,8 +24,9 @@ void kreiranje_naloga(Korisnik* korisnik)
 		korisnik2.email[strlen(korisnik->email)] = '\0';
 		strncpy(korisnik2.sifra, korisnik->sifra, strlen(korisnik->sifra));
 		korisnik2.sifra[strlen(korisnik->sifra)] = '\0';
+		korisnik2.tipOperacije = kreiranjeNaloga;
 		printf("\nProvera podataka, molimo sacekajte...\n\n");
-		char registrovan_birac = proveri_da_li_je_korisnik_registrovan(&korisnik2);
+		char registrovan_birac = proveri_da_li_je_korisnik_registrovan_ili_se_ulogujte(&korisnik2);
 		if ((int)registrovan_birac == 1)
 		{
 			printf("\nRegistracija uspesna!\n");
@@ -47,6 +48,14 @@ void kreiranje_naloga(Korisnik* korisnik)
 			pocetni_ekran(korisnik);
 			return;
 		}
+		else if ((int)registrovan_birac == 5) 
+		{
+			printf("Greska prilikom kreiranja naloga, zapoceta operacija nije prepoznata, molimo pokusajte opet\n");
+			Sleep(2000);
+			ocisti_ekran();
+			ocisti_podatke(korisnik);
+			continue;
+		}
 		else
 		{
 			printf("Greska prilikom kreiranja naloga, uneti podaci ne postoje kao registrovani, molimo pokusajte opet\n");
@@ -67,17 +76,26 @@ void prijavite_se(Korisnik* korisnik)
 		ocisti_podatke(korisnik);
 		unesi_podatke(korisnik);
 		// Ispis unetih vrednosti radi provere
-		bool uspesno_logovanje = korisnik_vec_postoji(*korisnik, true);
-		if (uspesno_logovanje)
+		Korisnik2 korisnik2;
+		strncpy(korisnik2.jmbg, korisnik->jmbg, 13);
+		korisnik2.jmbg[13] = '\0';
+		strncpy(korisnik2.imeKorisnika, korisnik->imeKorisnika, strlen(korisnik->imeKorisnika));
+		korisnik2.imeKorisnika[strlen(korisnik->imeKorisnika)] = '\0';
+		strncpy(korisnik2.prezimeKorisnika, korisnik->prezimeKorisnika, strlen(korisnik->prezimeKorisnika));
+		korisnik2.prezimeKorisnika[strlen(korisnik->prezimeKorisnika)] = '\0';
+		strncpy(korisnik2.brojTelefona, korisnik->brojTelefona, 10);
+		korisnik2.brojTelefona[10] = '\0';
+		strncpy(korisnik2.glasackiBroj, korisnik->glasackiBroj, 6);
+		korisnik2.glasackiBroj[6] = '\0';
+		strncpy(korisnik2.email, korisnik->email, strlen(korisnik->email));
+		korisnik2.email[strlen(korisnik->email)] = '\0';
+		strncpy(korisnik2.sifra, korisnik->sifra, strlen(korisnik->sifra));
+		korisnik2.sifra[strlen(korisnik->sifra)] = '\0';
+		korisnik2.tipOperacije = prijavljivanjeNaNalog;
+		char uspesno_logovanje = proveri_da_li_je_korisnik_registrovan_ili_se_ulogujte(&korisnik2);
+		if ((int)uspesno_logovanje == 3)
 		{
-			printf("\nPrijavljivanje uspesno, vasi podaci:\n");
-			printf("JMBG: %s\n", korisnik->jmbg);
-			printf("Ime: %s\n", korisnik->imeKorisnika);
-			printf("Prezime: %s\n", korisnik->prezimeKorisnika);
-			printf("Email: %s\n", korisnik->email);
-			printf("Broj telefona: %s\n", korisnik->brojTelefona);
-			printf("Sifra: %s\n", korisnik->sifra);
-			printf("Vas glasacki broj: %s\n", korisnik->glasackiBroj);
+			printf("\nPrijavljivanje uspesno!\n");
 			printf("Redirektovanje na pocetnu stranicu...\n");
 			Sleep(2000);
 			ocisti_ekran();
@@ -85,9 +103,17 @@ void prijavite_se(Korisnik* korisnik)
 			uspesno_zavrseno = true;
 			return;
 		}
-		else
+		else if((int)uspesno_logovanje == 4)
 		{
 			printf("Greska prilikom prijavljivanja na vas nalog, uneti podaci ne postoje kao registrovani, molimo pokusajte opet\n");
+			Sleep(2000);
+			ocisti_ekran();
+			ocisti_podatke(korisnik);
+			continue;
+		}
+		else if ((int)uspesno_logovanje == 5)
+		{
+			printf("Greska prilikom kreiranja naloga, zapoceta operacija nije prepoznata, molimo pokusajte opet\n");
 			Sleep(2000);
 			ocisti_ekran();
 			ocisti_podatke(korisnik);
@@ -96,7 +122,7 @@ void prijavite_se(Korisnik* korisnik)
 	}
 }
 
-char proveri_da_li_je_korisnik_registrovan(const Korisnik2* korisnik) 
+char proveri_da_li_je_korisnik_registrovan_ili_se_ulogujte(const Korisnik2* korisnik)
 {
 	WSADATA wsaData;
 	SOCKET ConnectSocket = INVALID_SOCKET;
@@ -208,7 +234,8 @@ char proveri_da_li_je_korisnik_registrovan(const Korisnik2* korisnik)
 
 	if (total == 1) 
 	{
-		//printf("Primljen odgovor od servera: %d\n", (int)resp);//0 za gresku, 1 za ispravno, 2 za pokusaj ponovnog registrovanja
+		//printf("Primljen odgovor od servera: %d\n", (int)resp);//0 za gresku, 1 za ispravno, 2 za pokusaj ponovnog registrovanja, 
+		// 3 za uspesan login, 4 za gresku kod login-a
 		return resp;
 	}
 	else 

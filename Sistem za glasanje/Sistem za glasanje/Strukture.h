@@ -33,4 +33,11 @@ typedef struct
 	char email[51];
 	char brojTelefona[11];
 	char glasackiBroj[7];
+	int tipOperacije;
 }Korisnik2;
+
+typedef enum
+{
+	kreiranjeNaloga = 1,
+	prijavljivanjeNaNalog = 2
+}TipOperacije;
