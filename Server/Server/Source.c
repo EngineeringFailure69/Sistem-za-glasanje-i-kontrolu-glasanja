@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include<curl/curl.h>
 
 // Potrebno je linkovati Ws2_32.lib
 #pragma comment(lib, "Ws2_32.lib")
@@ -199,6 +200,141 @@ bool upisi_podatke_u_fajl_birac(Korisnik korisnik)
     }
 }
 
+bool uspesna_verifikacija_koriscenjem_koda_poslatog_na_email(SOCKET ClientSocket, int verifikacioniKod)
+{
+    int kod;
+    int total = 0;
+    int expected = sizeof(verifikacioniKod);
+    char* bufptr = (char*)&kod;
+
+    while (total < expected)
+    {
+        int iResult = recv(ClientSocket, bufptr + total, expected - total, 0);
+        if (iResult > 0)
+        {
+            total += iResult;
+        }
+        else if (iResult == 0)
+        {
+            //Klijent je zatvorio vezu prerano
+            printf("Klijent je zatvorio vezu prerano (recv returned 0)\n");
+            break;
+        }
+        else
+        {
+            printf("recv neuspesan sa greskom: %d\n", WSAGetLastError());
+            break;
+        }
+    }
+    printf("Server generisan i poslat kod: %d i kod poslat sa klijenta: %d\n", verifikacioniKod, kod);
+    if (total == expected)
+    {
+        if (kod == verifikacioniKod) 
+        {
+            printf("Verifikacioni kod je ispravan!\n");
+            return true;
+        }
+        else 
+        {
+            printf("Greska, verifikacioni kod je pogresan");
+            return false;
+        }
+    }
+    return false;
+}
+
+bool posalji_email_i_proveri(const char* email, SOCKET ClientSocket)
+{
+    FILE* fajl = fopen("credentials.txt", "r");
+    if (fajl == NULL)
+    {
+        fprintf(stderr, "Greska prilikom otvaranja fajla!\n");
+        return false;
+    }
+    char email_fajl[50];
+    char sifra_fajl[256];
+    if (fgets(email_fajl, sizeof(email_fajl), fajl) != NULL)
+        email_fajl[strcspn(email_fajl, "\r\n")] = '\0';
+    else
+    {
+        fprintf(stderr, "Greska pri citanju email linije\n");
+        fclose(fajl);
+        return false;
+    }
+
+    if (fgets(sifra_fajl, sizeof(sifra_fajl), fajl) != NULL)
+        sifra_fajl[strcspn(sifra_fajl, "\r\n")] = '\0';
+    else
+    {
+        fprintf(stderr, "Greska pri citanju sifra linije\n");
+        fclose(fajl);
+        return false;
+    }
+
+    fclose(fajl);
+
+    printf("Procitan email: %s\n", email_fajl);
+    printf("Procitana sifra: %s\n", sifra_fajl);
+
+    //Ovde generisem kod koji saljem 
+    srand((unsigned)time(NULL));
+    int verifikacioni_kod = rand() % 9000000 + 1000000;
+
+    FILE* poruka = fopen("msg.txt", "w");
+    if (poruka == NULL)
+    {
+        fprintf(stderr, "Greska prilikom otvaranja fajla!\n");
+        return false;
+    }
+
+    //Poruka koja se salje se pamti u txt fajlu 
+    fprintf(poruka,
+        "From: \"<sistemzaglasanje@gmail.com>\"\r\n"
+        "To: <%s>\r\n"
+        "Subject: Verifikacioni kod za glasanje\r\n"
+        "\r\n"
+        "Vas kod je: %d\r\n",
+        email,
+        verifikacioni_kod
+    );
+    fclose(poruka);
+
+    //Inicijalizacija libcurl 
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+    CURL* curl = curl_easy_init();
+    if (!curl) return false;
+    FILE* porukacitanje = fopen("msg.txt", "r");
+
+    //Slanje email-a
+    curl_easy_setopt(curl, CURLOPT_URL, "smtp://smtp.gmail.com:587");
+    curl_easy_setopt(curl, CURLOPT_USE_SSL, (long)CURLUSESSL_ALL);
+    curl_easy_setopt(curl, CURLOPT_USERNAME, email_fajl);
+    curl_easy_setopt(curl, CURLOPT_PASSWORD, sifra_fajl);
+    char mail_from[128];
+    snprintf(mail_from, sizeof(mail_from), "<%s>", email_fajl);
+    curl_easy_setopt(curl, CURLOPT_MAIL_FROM, mail_from);
+    struct curl_slist* rcpts = NULL;
+    rcpts = curl_slist_append(rcpts, email);
+    curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, rcpts);
+    curl_easy_setopt(curl, CURLOPT_READDATA, porukacitanje);
+    curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
+
+    CURLcode res = curl_easy_perform(curl);
+
+    //Ciscenje
+    fclose(porukacitanje);
+    curl_slist_free_all(rcpts);
+    curl_easy_cleanup(curl);
+    curl_global_cleanup();
+    remove("msg.txt");
+
+    bool proveraVerifikacije = uspesna_verifikacija_koriscenjem_koda_poslatog_na_email(ClientSocket, verifikacioni_kod);
+    if (proveraVerifikacije)
+        return true;
+    else
+        return false;
+}
+
 void obradi_usera(SOCKET ClientSocket)
 {
     //Primanje tacno sizeof(User) bajtova
@@ -248,16 +384,19 @@ void obradi_usera(SOCKET ClientSocket)
             printf("Pokrenuta operacija kreiranja naloga za korisnika.\n");
             //Provera iz fajla registrovani_biraci
             bool postoji = birac_postoji(primljeni);
+            bool emailKodVerifikovan = posalji_email_i_proveri(primljeni.email, ClientSocket);
             printf("Provera korisnika: %s\n", postoji ? "POSTOJI" : "NE POSTOJI");
 
-            //Odgovor jedan bajt
-            
             //Biram koji odgovor saljem
-            if (postoji) //ako birac postoji proveravam da li je vec kreirao nalog
+            if (postoji && emailKodVerifikovan) //ako birac postoji proveravam da li je vec kreirao nalog
             {
                 bool uspesna_registracija = upisi_podatke_u_fajl_birac(primljeni);
-                resp = uspesna_registracija ? 1 : 2; // ako je uspesno registrovan nalog, i birac je na spisku, vracam 1, ako je birac vec 
+                resp = uspesna_registracija ? 1 : 2; //1 ako je uspesno registrovan nalog, i birac je na spisku, ako je birac vec 
                 //kreirao nalog, pa pokusava opet, onda vracam 2
+            }
+            else if(!emailKodVerifikovan)
+            {
+                resp = 4;
             }
             else //ako birac ne postoji na spisku kao registrovan, jednostavno vracam 0 kao i do sada 
             {
@@ -269,11 +408,11 @@ void obradi_usera(SOCKET ClientSocket)
             printf("Pokrenuta operacija prijavljivanja na nalog korisnika.\n");
             //Provera da li korisnik postoji
             bool uspesno_logovanje = korisnik_vec_postoji_kao_registrovan_nalog(primljeni, true);
-            resp = uspesno_logovanje ? 3 : 4; //3 ako uspe, 4 ako ne
+            resp = uspesno_logovanje ? 1 : 2; //1 ako uspe, 2 ako ne
         }
         else 
         {
-            resp = 5; // nije definisana operacija, ovo cu da prosirim da se salje odgovarajuca poruka posle 
+            resp = 3; // nije definisana operacija, ovo cu da prosirim da se salje odgovarajuca poruka posle 
         }
 
         //Slanje jednog bajta

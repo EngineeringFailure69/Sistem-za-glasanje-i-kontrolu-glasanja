@@ -10,16 +10,6 @@ void nacrtaj_korisnicki_ekran()
 	printf("\t\t\t -----------------------------------------------\n\n");
 }
 
-void nacrtaj_admin_ekran()
-{
-	printf("\t\tDobrodosli u elektronski sistem za glasanje i kontrolu glasanja u Republici Srbiji\n\n");
-	printf("\t\t\t -----------------------------------------------\n");
-	printf("\t\t\t|\t\t\t\t\t\t|\n\t\t\t|\t 1) Dodaj novog kandidata/stranku  \t\t|\n\t\t\t|\t\t\t\t\t\t|\n");
-	printf("\t\t\t|\t\t\t\t\t\t|\n\t\t\t|\t 2) Ukloni kandidata/stranku \t\t|\n\t\t\t|\t\t\t\t\t\t|\n");
-	printf("\t\t\t|\t\t\t\t\t\t|\n\t\t\t|\t 3) Pratite trenutne rezultate \t\t|\n\t\t\t|\t\t\t\t\t\t|\n");
-	printf("\t\t\t -----------------------------------------------\n\n");
-}
-
 void nacrtaj_pocetni_ekran()
 {
 	printf("\t\tDobrodosli u elektronski sistem za glasanje i kontrolu glasanja u Republici Srbiji\n\n");

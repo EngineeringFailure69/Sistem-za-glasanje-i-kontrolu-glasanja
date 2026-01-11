@@ -10,21 +10,7 @@ void kreiranje_naloga(Korisnik* korisnik)
 		unesi_podatke(korisnik);
 		// Ispis unetih vrednosti radi provere
 		Korisnik2 korisnik2;
-		strncpy(korisnik2.jmbg, korisnik->jmbg, 13);
-		korisnik2.jmbg[13] = '\0';
-		strncpy(korisnik2.imeKorisnika, korisnik->imeKorisnika, strlen(korisnik->imeKorisnika));
-		korisnik2.imeKorisnika[strlen(korisnik->imeKorisnika)] = '\0';
-		strncpy(korisnik2.prezimeKorisnika, korisnik->prezimeKorisnika, strlen(korisnik->prezimeKorisnika));
-		korisnik2.prezimeKorisnika[strlen(korisnik->prezimeKorisnika)] = '\0';
-		strncpy(korisnik2.brojTelefona, korisnik->brojTelefona, 10);
-		korisnik2.brojTelefona[10] = '\0';
-		strncpy(korisnik2.glasackiBroj, korisnik->glasackiBroj, 6);
-		korisnik2.glasackiBroj[6] = '\0';
-		strncpy(korisnik2.email, korisnik->email, strlen(korisnik->email));
-		korisnik2.email[strlen(korisnik->email)] = '\0';
-		strncpy(korisnik2.sifra, korisnik->sifra, strlen(korisnik->sifra));
-		korisnik2.sifra[strlen(korisnik->sifra)] = '\0';
-		korisnik2.tipOperacije = kreiranjeNaloga;
+		kopiraj_strukture(korisnik, &korisnik2, kreiranjeNaloga);
 		printf("\nProvera podataka, molimo sacekajte...\n\n");
 		char registrovan_birac = proveri_da_li_je_korisnik_registrovan_ili_se_ulogujte(&korisnik2);
 		if ((int)registrovan_birac == 1)
@@ -48,9 +34,17 @@ void kreiranje_naloga(Korisnik* korisnik)
 			pocetni_ekran(korisnik);
 			return;
 		}
-		else if ((int)registrovan_birac == 5) 
+		else if ((int)registrovan_birac == 3) 
 		{
 			printf("Greska prilikom kreiranja naloga, zapoceta operacija nije prepoznata, molimo pokusajte opet\n");
+			Sleep(2000);
+			ocisti_ekran();
+			ocisti_podatke(korisnik);
+			continue;
+		}
+		else if ((int)registrovan_birac == 4) 
+		{
+			printf("Greska prilikom kreiranja naloga, unet verifikacioni kod nije ispravan\n");
 			Sleep(2000);
 			ocisti_ekran();
 			ocisti_podatke(korisnik);
@@ -77,23 +71,10 @@ void prijavite_se(Korisnik* korisnik)
 		unesi_podatke(korisnik);
 		// Ispis unetih vrednosti radi provere
 		Korisnik2 korisnik2;
-		strncpy(korisnik2.jmbg, korisnik->jmbg, 13);
-		korisnik2.jmbg[13] = '\0';
-		strncpy(korisnik2.imeKorisnika, korisnik->imeKorisnika, strlen(korisnik->imeKorisnika));
-		korisnik2.imeKorisnika[strlen(korisnik->imeKorisnika)] = '\0';
-		strncpy(korisnik2.prezimeKorisnika, korisnik->prezimeKorisnika, strlen(korisnik->prezimeKorisnika));
-		korisnik2.prezimeKorisnika[strlen(korisnik->prezimeKorisnika)] = '\0';
-		strncpy(korisnik2.brojTelefona, korisnik->brojTelefona, 10);
-		korisnik2.brojTelefona[10] = '\0';
-		strncpy(korisnik2.glasackiBroj, korisnik->glasackiBroj, 6);
-		korisnik2.glasackiBroj[6] = '\0';
-		strncpy(korisnik2.email, korisnik->email, strlen(korisnik->email));
-		korisnik2.email[strlen(korisnik->email)] = '\0';
-		strncpy(korisnik2.sifra, korisnik->sifra, strlen(korisnik->sifra));
-		korisnik2.sifra[strlen(korisnik->sifra)] = '\0';
-		korisnik2.tipOperacije = prijavljivanjeNaNalog;
+		kopiraj_strukture(korisnik, &korisnik2, prijavljivanjeNaNalog);
+		printf("\nProvera podataka, molimo sacekajte...\n\n");
 		char uspesno_logovanje = proveri_da_li_je_korisnik_registrovan_ili_se_ulogujte(&korisnik2);
-		if ((int)uspesno_logovanje == 3)
+		if ((int)uspesno_logovanje == 1)
 		{
 			printf("\nPrijavljivanje uspesno!\n");
 			printf("Redirektovanje na pocetnu stranicu...\n");
@@ -103,7 +84,7 @@ void prijavite_se(Korisnik* korisnik)
 			uspesno_zavrseno = true;
 			return;
 		}
-		else if((int)uspesno_logovanje == 4)
+		else if((int)uspesno_logovanje == 2)
 		{
 			printf("Greska prilikom prijavljivanja na vas nalog, uneti podaci ne postoje kao registrovani, molimo pokusajte opet\n");
 			Sleep(2000);
@@ -111,7 +92,7 @@ void prijavite_se(Korisnik* korisnik)
 			ocisti_podatke(korisnik);
 			continue;
 		}
-		else if ((int)uspesno_logovanje == 5)
+		else if ((int)uspesno_logovanje == 3)
 		{
 			printf("Greska prilikom kreiranja naloga, zapoceta operacija nije prepoznata, molimo pokusajte opet\n");
 			Sleep(2000);
@@ -124,61 +105,8 @@ void prijavite_se(Korisnik* korisnik)
 
 char proveri_da_li_je_korisnik_registrovan_ili_se_ulogujte(const Korisnik2* korisnik)
 {
-	WSADATA wsaData;
-	SOCKET ConnectSocket = INVALID_SOCKET;
-	struct addrinfo* result = NULL, * ptr = NULL, hints;
+	SOCKET serverSocket = kreiraj_soket(DEFAULT_PORT);
 	int iResult;
-
-	// Inicijalizacija Winsock
-	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (iResult != 0) 
-	{
-		printf("WSAStartup neuspesan sa greskom: %d\n", iResult);
-		return 0;
-	}
-
-	ZeroMemory(&hints, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
-
-	// Adresa servera i port
-	iResult = getaddrinfo(SERVER_ADDRESS, DEFAULT_PORT, &hints, &result);
-	if (iResult != 0) 
-	{
-		printf("getaddrinfo neuspesan sa greskom: %d\n", iResult);
-		WSACleanup();
-		return 0;
-	}
-
-	// Pokusaj povezivanja 
-	for (ptr = result; ptr != NULL; ptr = ptr->ai_next) 
-	{
-		ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
-		if (ConnectSocket == INVALID_SOCKET) 
-		{
-			printf("socket neuspesan sa greskom: %ld\n", WSAGetLastError());
-			WSACleanup();
-			freeaddrinfo(result);
-			return 0;
-		}
-		iResult = connect(ConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
-		if (iResult == SOCKET_ERROR) 
-		{
-			closesocket(ConnectSocket);
-			ConnectSocket = INVALID_SOCKET;
-			continue;
-		}
-		break;
-	}
-	freeaddrinfo(result);
-
-	if (ConnectSocket == INVALID_SOCKET) 
-	{
-		printf("Neuspesna konekcija na server!\n");
-		WSACleanup();
-		return 0;
-	}
 
 	// Saljem celu strukturu Korisnik2
 	int total = 0;
@@ -186,20 +114,22 @@ char proveri_da_li_je_korisnik_registrovan_ili_se_ulogujte(const Korisnik2* kori
 	const char* bufptr = (const char*)korisnik;
 	while (total < expected) 
 	{
-		iResult = send(ConnectSocket, bufptr + total, expected - total, 0);
+		iResult = send(serverSocket, bufptr + total, expected - total, 0);
 		if (iResult == SOCKET_ERROR) 
 		{
 			printf("send neuspesan sa greskom: %d\n", WSAGetLastError());
-			closesocket(ConnectSocket);
+			closesocket(serverSocket);
 			WSACleanup();
 			return 0;
 		}
 		total += iResult;
 	}
 	//printf("Poslata Korisnik2 struktura, ukupno bajtova: %d\n", total);
-
+	//Verifikacioni kod koji se salje klijentu
+	if(korisnik->tipOperacije == kreiranjeNaloga) //Ovo se radi samo kada kreiramo nalog, jer kad se prijavljujemo na kreirani nalog, vec smo prosli verifikaciju
+		uspesna_verifikacija_koriscenjem_email_koda(serverSocket);
 	// Signaliziram serveru da je slanje zavrseno
-	iResult = shutdown(ConnectSocket, SD_SEND);
+	iResult = shutdown(serverSocket, SD_SEND);
 	if (iResult == SOCKET_ERROR) 
 	{
 		printf("shutdown neuspesan sa greskom: %d\n", WSAGetLastError());
@@ -212,7 +142,7 @@ char proveri_da_li_je_korisnik_registrovan_ili_se_ulogujte(const Korisnik2* kori
 	char* resp_ptr = &resp;
 	while (total < expected) 
 	{
-		iResult = recv(ConnectSocket, resp_ptr + total, expected - total, 0);
+		iResult = recv(serverSocket, resp_ptr + total, expected - total, 0);
 		if (iResult > 0) 
 		{
 			total += iResult;
@@ -229,13 +159,20 @@ char proveri_da_li_je_korisnik_registrovan_ili_se_ulogujte(const Korisnik2* kori
 		}
 	}
 
-	closesocket(ConnectSocket);
+	closesocket(serverSocket);
 	WSACleanup();
 
 	if (total == 1) 
 	{
-		//printf("Primljen odgovor od servera: %d\n", (int)resp);//0 za gresku, 1 za ispravno, 2 za pokusaj ponovnog registrovanja, 
-		// 3 za uspesan login, 4 za gresku kod login-a
+		//printf("Primljen odgovor od servera: %d\n", (int)resp);
+		/*
+		* Kodovi za povratni rezultat:
+		* 
+		* Za kreiranje naloga: 1 ako je uspesno registrovan nalog, 2 ako pokusava opet da kreira nalog, 3 ako je nepoznata operacija, 4 ako je 
+		* pogresan verifikacioni kod, sve ostalo je greska ako podaci ne postoje kao registrovani
+		* 
+		* Za prijavljivanje na nalog: 1 uspesno, 2 greska prilikom unosa podataka, 3 ako je nepoznata operacija
+		*/
 		return resp;
 	}
 	else 

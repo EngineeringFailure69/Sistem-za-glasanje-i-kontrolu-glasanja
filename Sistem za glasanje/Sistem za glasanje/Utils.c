@@ -293,54 +293,65 @@ void ocisti_podatke(Korisnik* korisnik)
 	korisnik->glasao = false;
 }
 
-SOCKET kreiraj_soket()
+SOCKET kreiraj_soket(char* portServera)
 {
 	WSADATA wsaData;
 	SOCKET ServerSocket = INVALID_SOCKET;
-	struct addrinfo* result = NULL, hints;
-	const char* imeServera = "127.0.0.1";   // ili IP/adresa servera
-	const char* portServera = "27017";       // ili port na kojem server slusa
+	struct addrinfo* result = NULL, hints, *ptr = NULL;
+	const char* adresaServera = SERVER_ADDRESS;   // ili IP/adresa servera
+	const char* portServeraZaKonektovanje = portServera;       // ili port na kojem server slusa
+	int iResult;
 
-	// 1) Inicijalizacija Winsock-a
-	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) 
+	// Inicijalizacija Winsock
+	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (iResult != 0)
 	{
-		fprintf(stderr, "WSAStartup neuspesan\n");
-		return INVALID_SOCKET;
+		printf("WSAStartup neuspesan sa greskom: %d\n", iResult);
+		return 0;
 	}
 
-	// 2) Priprema getaddrinfo
 	ZeroMemory(&hints, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 
-	if (getaddrinfo(imeServera, portServera, &hints, &result) != 0) 
+	// Adresa servera i port
+	iResult = getaddrinfo(adresaServera, portServeraZaKonektovanje, &hints, &result);
+	if (iResult != 0)
 	{
-		fprintf(stderr, "getaddrinfo neuspesan\n");
+		printf("getaddrinfo neuspesan sa greskom: %d\n", iResult);
 		WSACleanup();
-		return INVALID_SOCKET;
+		return 0;
 	}
 
-	// 3) Kreiranje socket-a
-	ServerSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-	if (ServerSocket == INVALID_SOCKET) 
+	// Pokusaj povezivanja 
+	for (ptr = result; ptr != NULL; ptr = ptr->ai_next)
 	{
-		fprintf(stderr, "socket neuspesan: %d\n", WSAGetLastError());
-		freeaddrinfo(result);
-		WSACleanup();
-		return INVALID_SOCKET;
-	}
-
-	// 4) Povezivanje na server
-	if (connect(ServerSocket, result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR) 
-	{
-		fprintf(stderr, "connect neuspesan: %d\n", WSAGetLastError());
-		closesocket(ServerSocket);
-		freeaddrinfo(result);
-		WSACleanup();
-		return INVALID_SOCKET;
+		ServerSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
+		if (ServerSocket == INVALID_SOCKET)
+		{
+			printf("socket neuspesan sa greskom: %ld\n", WSAGetLastError());
+			WSACleanup();
+			freeaddrinfo(result);
+			return 0;
+		}
+		iResult = connect(ServerSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
+		if (iResult == SOCKET_ERROR)
+		{
+			closesocket(ServerSocket);
+			ServerSocket = INVALID_SOCKET;
+			continue;
+		}
+		break;
 	}
 	freeaddrinfo(result);
+
+	if (ServerSocket == INVALID_SOCKET)
+	{
+		printf("Neuspesna konekcija na server!\n");
+		WSACleanup();
+		return 0;
+	}
 
 	return ServerSocket;
 }
@@ -348,7 +359,8 @@ SOCKET kreiraj_soket()
 void citanje_svih_kandidata(int izbor)
 {
 	//Primanje tacno sizeof(Kandidat) bajtova
-	SOCKET ServerSocket = kreiraj_soket();
+	char* portServera = "27017";
+	SOCKET ServerSocket = kreiraj_soket(portServera);
 	Kandidat primljeni;
 	int total = 0;
 	int expected = sizeof(Kandidat);
@@ -425,5 +437,68 @@ void vrati_se_nazad(Korisnik* korisnik)
 		ocisti_ekran();
 		korisnicki_ekran(korisnik);
 		return;
+	}
+}
+
+void kopiraj_strukture(Korisnik* korisnik, Korisnik2* korisnik2, int tipOperacije)
+{
+	strncpy(korisnik2->jmbg, korisnik->jmbg, 13);
+	korisnik2->jmbg[13] = '\0';
+	strncpy(korisnik2->imeKorisnika, korisnik->imeKorisnika, strlen(korisnik->imeKorisnika));
+	korisnik2->imeKorisnika[strlen(korisnik->imeKorisnika)] = '\0';
+	strncpy(korisnik2->prezimeKorisnika, korisnik->prezimeKorisnika, strlen(korisnik->prezimeKorisnika));
+	korisnik2->prezimeKorisnika[strlen(korisnik->prezimeKorisnika)] = '\0';
+	strncpy(korisnik2->brojTelefona, korisnik->brojTelefona, 10);
+	korisnik2->brojTelefona[10] = '\0';
+	strncpy(korisnik2->glasackiBroj, korisnik->glasackiBroj, 6);
+	korisnik2->glasackiBroj[6] = '\0';
+	strncpy(korisnik2->email, korisnik->email, strlen(korisnik->email));
+	korisnik2->email[strlen(korisnik->email)] = '\0';
+	strncpy(korisnik2->sifra, korisnik->sifra, strlen(korisnik->sifra));
+	korisnik2->sifra[strlen(korisnik->sifra)] = '\0';
+	if (tipOperacije == kreiranjeNaloga)
+		korisnik2->tipOperacije = kreiranjeNaloga;
+	else if (tipOperacije == prijavljivanjeNaNalog)
+		korisnik2->tipOperacije = prijavljivanjeNaNalog;
+	else
+		printf("Tip operacije nepoznat");
+}
+
+void uspesna_verifikacija_koriscenjem_email_koda(SOCKET serverSocket)
+{
+	int ret = 0, verifikacioniKod, brojacPokusaja = 0; //brojac pokusaja broji koliko puta je kod pogresno unet, i ako je to vece od 5, onda se ponistava kreiranje naloga
+	do 
+	{
+		printf("\nUnesite verifikacioni kod koji ste dobili na vasu email adresu: ");
+		ret = scanf_s("%d", &verifikacioniKod);
+		if (ret != 1 || verifikacioniKod > 9999999) //9999999 je najveci sedmocifreni broj, mrzi me da pisem funkciju koja ce da broji cifre, pa cu ovako
+		{
+			ocisti_ekran();
+			printf("Greska: unos mora biti broj, i mora biti manji od 9999999\n");
+			int c;
+			while ((c = getchar()) != '\n' && c != EOF) {}
+		}
+		brojacPokusaja++;
+
+	} while ((ret!=1 || verifikacioniKod > 9999999) && brojacPokusaja < 5);
+
+	int iResult;
+
+	// Saljem kod
+	int total = 0;
+	int expected = sizeof(verifikacioniKod);
+	const char* bufptr = (const char*)&verifikacioniKod;
+	while (total < expected)
+	{
+		iResult = send(serverSocket, bufptr + total, expected - total, 0);
+		if (iResult == SOCKET_ERROR)
+		{
+			printf("send neuspesan sa greskom: %d\n", WSAGetLastError());
+			closesocket(serverSocket);
+			WSACleanup();
+			//return 0;
+			break;
+		}
+		total += iResult;
 	}
 }
