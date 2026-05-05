@@ -21,7 +21,6 @@ typedef struct
 	char email[51];
 	char brojTelefona[11];
 	char glasackiBroj[7];
-	bool glasao;
 }Korisnik;
 
 typedef struct
@@ -39,5 +38,6 @@ typedef struct
 typedef enum
 {
 	kreiranjeNaloga = 1,
-	prijavljivanjeNaNalog = 2
+	prijavljivanjeNaNalog = 2,
+	glasanje = 3
 }TipOperacije;

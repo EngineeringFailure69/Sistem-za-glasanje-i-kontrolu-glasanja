@@ -49,8 +49,17 @@ typedef struct
 typedef enum 
 {
     kreiranjeNaloga = 1,
-    prijavljivanjeNaNalog = 2
+    prijavljivanjeNaNalog = 2, 
+    glasanje = 3
 }TipOperacije;
+
+typedef enum 
+{
+    uspesnoGlasanje = 1,
+    vecGlasao = 2,
+    serverskaGreska = 3,
+    kandidatNePostoji = 4
+}KodoviGresaka;
 
 #pragma region Obradjivanje_biraca_klijent_dela
 
@@ -335,6 +344,104 @@ bool posalji_email_i_proveri(const char* email, SOCKET ClientSocket)
         return false;
 }
 
+int korisnik_glasao(SOCKET ClientSocket, Korisnik korisnik) 
+{
+    int brojListe;
+    int total = 0;
+    int expected = sizeof(int);
+    char* bufptr = (char*)&brojListe;
+
+    while (total < expected)
+    {
+        int iResult = recv(ClientSocket, bufptr + total, expected - total, 0);
+        if (iResult > 0)
+        {
+            total += iResult;
+        }
+        else if (iResult == 0)
+        {
+            //Klijent je zatvorio vezu prerano
+            printf("Klijent je zatvorio vezu prerano (recv returned 0)\n");
+            break;
+        }
+        else
+        {
+            printf("recv neuspesan sa greskom: %d\n", WSAGetLastError());
+            break;
+        }
+    }
+    if (total == expected)
+    {
+        bool kandidatPostoji = false;
+        Kandidat kandidat;
+        FILE* fajl;
+        fajl = fopen("registrovani_kandidati.bin", "rb+");
+        if (fajl == NULL)
+        {
+            fprintf(stderr, "Greska prilikom otvaranja fajla!\n");
+            return serverskaGreska;
+        }
+        while (fread(&kandidat, sizeof(kandidat), 1, fajl) == 1)
+        {
+            if (kandidat.redniBroj == brojListe) 
+            {
+                kandidatPostoji = true;
+                //fclose(fajl);
+                break;
+            }
+        }
+        if (kandidatPostoji) 
+        {
+            Korisnik user;
+            int upisano = 0;
+            FILE* fajl2;
+            fajl2 = fopen("Biraci_koji_su_glasali.bin", "ab+");
+            fseek(fajl2, 0, SEEK_SET);
+            if (fajl2 == NULL)
+            {
+                fprintf(stderr, "Greska prilikom otvaranja fajla!\n");
+                return serverskaGreska;
+            }
+            while (fread(&user, sizeof(user), 1, fajl2) == 1)
+            {
+                if (strcmp(korisnik.jmbg, user.jmbg) == 0 && strcmp(korisnik.brojTelefona, user.brojTelefona) == 0
+                    && strcmp(korisnik.glasackiBroj, user.glasackiBroj) == 0 && strcmp(korisnik.imeKorisnika, user.imeKorisnika) == 0
+                    && strcmp(korisnik.prezimeKorisnika, user.prezimeKorisnika) == 0 && strcmp(korisnik.email, user.email) == 0)
+                {
+                    printf("Greska prilikom glasanja i upisa podataka, korisnik je vec glasao!\n");
+                    fclose(fajl2);
+                    return vecGlasao;
+                }
+            }
+            upisano = fwrite(&korisnik, sizeof(Korisnik), 1, fajl2);
+            fclose(fajl2);
+            if (upisano == 1)
+            {
+                printf("Uspesno glasanje, podaci zabelezeni!\n");
+                //rewind(fajl); //vracam ga na pocetak fajla
+                fseek(fajl, -(long)sizeof(kandidat), SEEK_CUR); //Vracam se na pocetak strukture kandidata za kojeg glasa korisnik u fajlu
+                kandidat.brojGlasova = kandidat.brojGlasova + 1;
+                printf("Test broj glasova: %d\n", kandidat.brojGlasova);
+                fwrite(&kandidat, sizeof(kandidat), 1, fajl);
+                fclose(fajl);
+                return uspesnoGlasanje;
+            }
+            else
+            {
+                fclose(fajl);
+                printf("Greska prilikom glasanja i upisa podataka!\n");
+                return serverskaGreska;
+            }
+        }
+        else 
+        {
+            fclose(fajl);
+            printf("Greska, kandidat za koga glasate ne postoji!\n");
+            return kandidatNePostoji;
+        }
+    }
+}
+
 void obradi_usera(SOCKET ClientSocket)
 {
     //Primanje tacno sizeof(User) bajtova
@@ -409,6 +516,12 @@ void obradi_usera(SOCKET ClientSocket)
             //Provera da li korisnik postoji
             bool uspesno_logovanje = korisnik_vec_postoji_kao_registrovan_nalog(primljeni, true);
             resp = uspesno_logovanje ? 1 : 2; //1 ako uspe, 2 ako ne
+        }
+        else if (primljeni.tipOperacije == glasanje) 
+        {
+            printf("Pokrenuta operacija glasanja\n");
+            int uspesno_glasanje = korisnik_glasao(ClientSocket, primljeni);
+            resp = uspesno_glasanje; // vracam kod odgovora
         }
         else 
         {

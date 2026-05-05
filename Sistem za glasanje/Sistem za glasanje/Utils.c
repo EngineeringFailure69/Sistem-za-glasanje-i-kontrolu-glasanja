@@ -290,7 +290,7 @@ void ocisti_podatke(Korisnik* korisnik)
 	korisnik->email[0] = '\0';
 	korisnik->brojTelefona[0] = '\0';
 	korisnik->glasackiBroj[0] = '\0';
-	korisnik->glasao = false;
+	//korisnik->glasao = false;
 }
 
 SOCKET kreiraj_soket(char* portServera)
@@ -460,6 +460,8 @@ void kopiraj_strukture(Korisnik* korisnik, Korisnik2* korisnik2, int tipOperacij
 		korisnik2->tipOperacije = kreiranjeNaloga;
 	else if (tipOperacije == prijavljivanjeNaNalog)
 		korisnik2->tipOperacije = prijavljivanjeNaNalog;
+	else if (tipOperacije == glasanje)
+		korisnik2->tipOperacije = glasanje;
 	else
 		printf("Tip operacije nepoznat");
 }
@@ -500,5 +502,135 @@ void uspesna_verifikacija_koriscenjem_email_koda(SOCKET serverSocket)
 			break;
 		}
 		total += iResult;
+	}
+	// Signaliziram serveru da je slanje zavrseno
+	iResult = shutdown(serverSocket, SD_SEND);
+	if (iResult == SOCKET_ERROR)
+	{
+		printf("shutdown neuspesan sa greskom: %d\n", WSAGetLastError());
+	}
+
+	// Cekamo i primamo odgovor: 1 bajt
+	char resp = 0;
+	total = 0;
+	expected = 1; // ocekujem 1 bajt
+	char* resp_ptr = &resp;
+	while (total < expected)
+	{
+		iResult = recv(serverSocket, resp_ptr + total, expected - total, 0);
+		if (iResult > 0)
+		{
+			total += iResult;
+		}
+		else if (iResult == 0)
+		{
+			printf("Konekcija zatvorena od strane servera pre nego sto je poslao odgovor\n");
+			break;
+		}
+		else
+		{
+			printf("recv neuspesno sa greskom: %d\n", WSAGetLastError());
+			break;
+		}
+	}
+
+	closesocket(serverSocket);
+	WSACleanup();
+
+	if (total == 1)
+	{
+		if((int)resp == 3)
+			return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+int glasajte(int brojListe, Korisnik* korisnik)
+{
+	SOCKET serverSocket = kreiraj_soket(DEFAULT_PORT);
+	int iResult;
+
+	//Saljem strukturu
+	Korisnik2 korisnik2;
+	kopiraj_strukture(korisnik, &korisnik2, glasanje);
+	// Saljem celu strukturu Korisnik2
+	int total = 0;
+	int expected = sizeof(Korisnik2);
+	const char* bufptr = (const char*)&korisnik2;
+	while (total < expected)
+	{
+		iResult = send(serverSocket, bufptr + total, expected - total, 0);
+		if (iResult == SOCKET_ERROR)
+		{
+			printf("send neuspesan sa greskom: %d\n", WSAGetLastError());
+			closesocket(serverSocket);
+			WSACleanup();
+			return 0;
+		}
+		total += iResult;
+	}
+
+	// Saljem broj liste
+	total = 0;
+	expected = sizeof(brojListe);
+	const char* bufptr2 = (const char*)&brojListe;
+	while (total < expected)
+	{
+		iResult = send(serverSocket, bufptr2 + total, expected - total, 0);
+		if (iResult == SOCKET_ERROR)
+		{
+			printf("send neuspesan sa greskom: %d\n", WSAGetLastError());
+			closesocket(serverSocket);
+			WSACleanup();
+			return 0;
+			break;
+		}
+		total += iResult;
+	}
+
+	//Slanje zavrseno
+	iResult = shutdown(serverSocket, SD_SEND);
+	if (iResult == SOCKET_ERROR)
+	{
+		printf("shutdown neuspesan sa greskom: %d\n", WSAGetLastError());
+	}
+
+	// Cekamo i primamo odgovor: 1 bajt
+	char resp = 0;
+	total = 0;
+	expected = 1; // ocekujem 1 bajt
+	char* resp_ptr = &resp;
+	while (total < expected)
+	{
+		iResult = recv(serverSocket, resp_ptr + total, expected - total, 0);
+		if (iResult > 0)
+		{
+			total += iResult;
+		}
+		else if (iResult == 0)
+		{
+			printf("Konekcija zatvorena od strane servera pre nego sto je poslao odgovor\n");
+			break;
+		}
+		else
+		{
+			printf("recv neuspesno sa greskom: %d\n", WSAGetLastError());
+			break;
+		}
+	}
+
+	closesocket(serverSocket);
+	WSACleanup();
+
+	if (total == 1)
+	{
+		return (int)resp;
+	}
+	else
+	{
+		return 5;
 	}
 }

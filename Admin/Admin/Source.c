@@ -28,6 +28,15 @@ typedef struct
 	int brojGlasova;
 }Kandidat;
 
+typedef enum 
+{
+	kreiranjeKandidata = 1,
+	procitajSveKandidate = 2,
+	imeIliPrezime = 3, 
+	skracenica = 4, 
+	nazivStranke = 5
+}Izbor;
+
 void ocisti_ekran();
 char* citaj_unos();
 bool string_sadrzi_slova_i_specijalne_karaktere(const char* s);
@@ -171,20 +180,20 @@ bool posalji_podatke_za_upis(const Kandidat* kandidat) {
 
 char* formatiraj_string(char* s, int izbor)
 {
-	if (izbor == 1) //ime ili prezime
+	if (izbor == imeIliPrezime) //ime ili prezime
 	{
 		s[0] = toupper(s[0]);
 		for (int i = 1; s[i] != '\0'; i++)
 			s[i] = tolower(s[i]);
 		return s;
 	}
-	else if (izbor == 2) //skracenica 
+	else if (izbor == skracenica) //skracenica 
 	{
 		for (int i = 0; s[i] != '\0'; i++)
 			s[i] = toupper(s[i]);
 		return s;
 	}
-	else if (izbor == 3) //naziv stranke
+	else if (izbor == nazivStranke) //naziv stranke
 	{
 		for (int i = 0; s[i] != '\0'; i++)
 			if (i == 0 || s[i-1] == ' ')
@@ -214,7 +223,7 @@ void unesi_podatke(Kandidat* kandidat)
 		{
 			strncpy(kandidat->punNazivStranke, input, strlen(input));
 			kandidat->punNazivStranke[strlen(input)] = '\0';
-			formatiraj_string(kandidat->punNazivStranke, 3);
+			formatiraj_string(kandidat->punNazivStranke, nazivStranke);
 			free(input);
 			input = NULL;
 			break;
@@ -240,7 +249,7 @@ void unesi_podatke(Kandidat* kandidat)
 		{
 			strncpy(kandidat->skracenica, input, strlen(input));
 			kandidat->skracenica[strlen(input)] = '\0';
-			formatiraj_string(kandidat->skracenica, 2);
+			formatiraj_string(kandidat->skracenica, skracenica);
 			free(input);
 			input = NULL;
 			break;
@@ -267,7 +276,7 @@ void unesi_podatke(Kandidat* kandidat)
 		{
 			strncpy(kandidat->imeLidera, input, strlen(input));
 			kandidat->imeLidera[strlen(input)] = '\0';
-			formatiraj_string(kandidat->imeLidera, 1);
+			formatiraj_string(kandidat->imeLidera, imeIliPrezime);
 			free(input);
 			input = NULL;
 			break;
@@ -295,7 +304,7 @@ void unesi_podatke(Kandidat* kandidat)
 		{
 			strncpy(kandidat->prezimeLidera, input, strlen(input));
 			kandidat->prezimeLidera[strlen(input)] = '\0';
-			formatiraj_string(kandidat->prezimeLidera, 1);
+			formatiraj_string(kandidat->prezimeLidera, imeIliPrezime);
 			free(input);
 			input = NULL;
 			break;
@@ -381,20 +390,20 @@ void pocetni_ekran(Kandidat* kandidat)
 		printf("Odaberite broj 1 ili 2 i pritisnite Enter: ");
 
 		ret = scanf_s("%d", &izbor);
-		if (ret != 1 || (izbor != 1 && izbor != 2)) {
+		if (ret != 1 || (izbor != kreiranjeKandidata && izbor != procitajSveKandidate)) {
 			ocisti_ekran();
 			nacrtaj_pocetni_ekran();
 			printf("Greska: unos mora biti broj 1 ili 2\n");
 			int c;
 			while ((c = getchar()) != '\n' && c != EOF) {}
 		}
-	} while (ret != 1 || (izbor != 1 && izbor != 2));
-	if (izbor == 1)
+	} while (ret != 1 || (izbor != kreiranjeKandidata && izbor != procitajSveKandidate));
+	if (izbor == kreiranjeKandidata)
 	{
 		ocisti_ekran();
 		kreiranje_kandidata(kandidat);
 	}
-	if (izbor == 2) 
+	if (izbor == procitajSveKandidate) 
 	{
 		ocisti_ekran();
 		printf("Svi kandidati: \n\n");

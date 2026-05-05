@@ -14,3 +14,4 @@ void citanje_svih_kandidata(int izbor);
 void vrati_se_nazad(Korisnik* korisnik);
 void kopiraj_strukture(Korisnik* korisnik, Korisnik2* korisnik2, int tipOperacije);
 void uspesna_verifikacija_koriscenjem_email_koda(SOCKET serverSocket);
+int glasajte(int brojListe, Korisnik* korisnik);
