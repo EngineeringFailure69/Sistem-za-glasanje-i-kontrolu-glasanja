@@ -9,7 +9,7 @@ void korisnicki_ekran(Korisnik* korisnik)
 		printf("Odaberite broj 1, 2 ili 3 i pritisnite Enter: ");
 
 		ret = scanf_s("%d", &izbor);
-		if (ret != 1 || (izbor < 1 || izbor > 3)) 
+		if (ret != 1 || (izbor < prikazKandidata || izbor > pracenjeRezultata)) 
 		{
 			ocisti_ekran();
 			nacrtaj_korisnicki_ekran();
@@ -18,46 +18,42 @@ void korisnicki_ekran(Korisnik* korisnik)
 			int c;
 			while ((c = getchar()) != '\n' && c != EOF) {}
 		}
-	} while (ret != 1 || (izbor < 1 || izbor > 3));
-	if (izbor == 1)
+	} while (ret != 1 || (izbor < prikazKandidata || izbor > pracenjeRezultata));
+	if (izbor == prikazKandidata)
 	{
 		ocisti_ekran();
 		printf("Svi kandidati:\n\n");
-		citanje_svih_kandidata(1);
+		citanje_svih_kandidata(praznaOperacija);
 		vrati_se_nazad(korisnik);
 	}
-	else if (izbor == 2)
+	else if (izbor == glasanjeZaKandidata)
 	{
 		int brojListe, odgovorServera;
 		ocisti_ekran();
-		citanje_svih_kandidata(2);
+		citanje_svih_kandidata(praznaOperacija);
 		printf("Glasajte za svog kandidata unosenjem broja liste: ");
 		scanf_s("%d", &brojListe);
 		odgovorServera = glasajte(brojListe, korisnik);
-		while (odgovorServera == 5 || odgovorServera == 3)
+		while (odgovorServera == nedefinisanOdgovor || odgovorServera == serverskaGreska)
 		{
 			ocisti_ekran();
-			citanje_svih_kandidata(2);
+			citanje_svih_kandidata(praznaOperacija);
 			printf("Doslo je do greske na serveru, probajte ponovo.\nGlasajte za svog kandidata unosenjem broja liste: ");
 			scanf_s("%d", &brojListe);
 		}
-		if (odgovorServera == 1)
+		if (odgovorServera == uspesnoGlasanje)
 			printf("Uspesno ste glasali za svog kandidata!\n");
-		if(odgovorServera == 2)
+		if(odgovorServera == ponovnoGlasanje)
 			printf("Vec ste glasali, ne mozete da glasate ponovo!\n");
-		if (odgovorServera == 4)
+		if (odgovorServera == nepostojeciKandidat)
 			printf("Kandidat za koga pokusavate da glasate ne postoji!\n");
 		vrati_se_nazad(korisnik);
 	}
-	//else if (korisnik->glasao)
-	//{
-	//	printf("Greska, vec ste glasali, i ne mozete opet");
-	//}
 	else
 	{
 		ocisti_ekran();
 		printf("Pratite rezultate: \n\n");
-		citanje_svih_kandidata(3);
+		citanje_svih_kandidata(pracenjeRezultata);
 		vrati_se_nazad(korisnik);
 	}
 }
@@ -71,7 +67,7 @@ void pocetni_ekran(Korisnik* korisnik)
 		printf("Odaberite broj 1 ili 2 i pritisnite Enter: ");
 
 		ret = scanf_s("%d", &izbor);
-		if (ret != 1 || (izbor != 1 && izbor != 2)) 
+		if (ret != 1 || (izbor != kreiranjeNaloga && izbor != prijavljivanjeNaNalog)) 
 		{
 			ocisti_ekran();
 			nacrtaj_pocetni_ekran();
@@ -80,12 +76,12 @@ void pocetni_ekran(Korisnik* korisnik)
 			while ((c = getchar()) != '\n' && c != EOF) {}
 		}
 	} while (ret != 1 || (izbor != 1 && izbor != 2));
-	if (izbor == 1)
+	if (izbor == kreiranjeNaloga)
 	{
 		ocisti_ekran();
 		kreiranje_naloga(korisnik);
 	}
-	else if (izbor == 2)
+	else if (izbor == prijavljivanjeNaNalog)
 	{
 		ocisti_ekran();
 		prijavite_se(korisnik);

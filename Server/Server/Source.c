@@ -14,6 +14,8 @@
 // Potrebno je linkovati Ws2_32.lib
 #pragma comment(lib, "Ws2_32.lib")
 
+#pragma region Strukture i enumi
+
 // Definicija strukture Korisnik ista na klijentu i serveru
 typedef struct
 {
@@ -60,6 +62,8 @@ typedef enum
     serverskaGreska = 3,
     kandidatNePostoji = 4
 }KodoviGresaka;
+
+#pragma endregion
 
 #pragma region Obradjivanje_biraca_klijent_dela
 
@@ -386,7 +390,6 @@ int korisnik_glasao(SOCKET ClientSocket, Korisnik korisnik)
             if (kandidat.redniBroj == brojListe) 
             {
                 kandidatPostoji = true;
-                //fclose(fajl);
                 break;
             }
         }
@@ -418,7 +421,6 @@ int korisnik_glasao(SOCKET ClientSocket, Korisnik korisnik)
             if (upisano == 1)
             {
                 printf("Uspesno glasanje, podaci zabelezeni!\n");
-                //rewind(fajl); //vracam ga na pocetak fajla
                 fseek(fajl, -(long)sizeof(kandidat), SEEK_CUR); //Vracam se na pocetak strukture kandidata za kojeg glasa korisnik u fajlu
                 kandidat.brojGlasova = kandidat.brojGlasova + 1;
                 printf("Test broj glasova: %d\n", kandidat.brojGlasova);
@@ -484,8 +486,7 @@ void obradi_usera(SOCKET ClientSocket)
         primljeni.email[sizeof primljeni.email - 1] = '\0';
 
         char resp;
-        //bool postoji;
-        //Provera da li radim registrovanje ili login
+        //Provera da li radim registrovanje ili login ili glasanje
         if (primljeni.tipOperacije == kreiranjeNaloga) 
         {
             printf("Pokrenuta operacija kreiranja naloga za korisnika.\n");
@@ -499,7 +500,7 @@ void obradi_usera(SOCKET ClientSocket)
             {
                 bool uspesna_registracija = upisi_podatke_u_fajl_birac(primljeni);
                 resp = uspesna_registracija ? 1 : 2; //1 ako je uspesno registrovan nalog, i birac je na spisku, ako je birac vec 
-                //kreirao nalog, pa pokusava opet, onda vracam 2
+                //kreirao nalog pa pokusava opet, onda vracam 2
             }
             else if(!emailKodVerifikovan)
             {
@@ -525,7 +526,7 @@ void obradi_usera(SOCKET ClientSocket)
         }
         else 
         {
-            resp = 3; // nije definisana operacija, ovo cu da prosirim da se salje odgovarajuca poruka posle 
+            resp = 3; // nije definisana operacija
         }
 
         //Slanje jednog bajta
@@ -547,7 +548,7 @@ void obradi_usera(SOCKET ClientSocket)
         }
     }
 
-    //Zatvoranje konekcije sa tim klijentom
+    //Zatvaranje konekcije sa tim klijentom
     closesocket(ClientSocket);
     printf("Konekcija sa klijentom zatvorena\n");
 }

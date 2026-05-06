@@ -290,7 +290,6 @@ void ocisti_podatke(Korisnik* korisnik)
 	korisnik->email[0] = '\0';
 	korisnik->brojTelefona[0] = '\0';
 	korisnik->glasackiBroj[0] = '\0';
-	//korisnik->glasao = false;
 }
 
 SOCKET kreiraj_soket(char* portServera)

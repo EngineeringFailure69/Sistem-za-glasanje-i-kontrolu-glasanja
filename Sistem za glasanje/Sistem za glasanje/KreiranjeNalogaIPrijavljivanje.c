@@ -13,7 +13,7 @@ void kreiranje_naloga(Korisnik* korisnik)
 		kopiraj_strukture(korisnik, &korisnik2, kreiranjeNaloga);
 		printf("\nProvera podataka, molimo sacekajte...\n\n");
 		char registrovan_birac = proveri_da_li_je_korisnik_registrovan_ili_se_ulogujte(&korisnik2);
-		if ((int)registrovan_birac == 1)
+		if ((int)registrovan_birac == uspesnoKreiranje)
 		{
 			printf("\nRegistracija uspesna!\n");
 			printf("\nKreiranje naloga, molimo sacekajte...\n");
@@ -25,7 +25,7 @@ void kreiranje_naloga(Korisnik* korisnik)
 			uspesno_zavrseno = true;
 			return;
 		}
-		else if ((int)registrovan_birac == 2)
+		else if ((int)registrovan_birac == vecRegistrovanBirac)
 		{
 			printf("Birac je vec registrovan, vracamo vas na pocetni ekran\n");
 			Sleep(2000);
@@ -34,7 +34,7 @@ void kreiranje_naloga(Korisnik* korisnik)
 			pocetni_ekran(korisnik);
 			return;
 		}
-		else if ((int)registrovan_birac == 3) 
+		else if ((int)registrovan_birac == nepoznataOperacijaKreiranja)
 		{
 			printf("Greska prilikom kreiranja naloga, zapoceta operacija nije prepoznata, molimo pokusajte opet\n");
 			Sleep(2000);
@@ -42,7 +42,7 @@ void kreiranje_naloga(Korisnik* korisnik)
 			ocisti_podatke(korisnik);
 			continue;
 		}
-		else if ((int)registrovan_birac == 4) 
+		else if ((int)registrovan_birac == neispravanVerifikacioniKod)
 		{
 			printf("Greska prilikom kreiranja naloga, unet verifikacioni kod nije ispravan\n");
 			Sleep(2000);
@@ -74,7 +74,7 @@ void prijavite_se(Korisnik* korisnik)
 		kopiraj_strukture(korisnik, &korisnik2, prijavljivanjeNaNalog);
 		printf("\nProvera podataka, molimo sacekajte...\n\n");
 		char uspesno_logovanje = proveri_da_li_je_korisnik_registrovan_ili_se_ulogujte(&korisnik2);
-		if ((int)uspesno_logovanje == 1)
+		if ((int)uspesno_logovanje == uspesnoPrijavljivanje)
 		{
 			printf("\nPrijavljivanje uspesno!\n");
 			printf("Redirektovanje na pocetnu stranicu...\n");
@@ -84,7 +84,7 @@ void prijavite_se(Korisnik* korisnik)
 			uspesno_zavrseno = true;
 			return;
 		}
-		else if((int)uspesno_logovanje == 2)
+		else if((int)uspesno_logovanje == nepostojeciPodaci)
 		{
 			printf("Greska prilikom prijavljivanja na vas nalog, uneti podaci ne postoje kao registrovani, molimo pokusajte opet\n");
 			Sleep(2000);
@@ -92,7 +92,7 @@ void prijavite_se(Korisnik* korisnik)
 			ocisti_podatke(korisnik);
 			continue;
 		}
-		else if ((int)uspesno_logovanje == 3)
+		else if ((int)uspesno_logovanje == nepoznataOperacijaPrijavljivanja)
 		{
 			printf("Greska prilikom kreiranja naloga, zapoceta operacija nije prepoznata, molimo pokusajte opet\n");
 			Sleep(2000);
